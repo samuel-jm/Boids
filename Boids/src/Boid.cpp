@@ -1,15 +1,19 @@
 #include "Boid.h"
 #include "Quadtree.h"
 
-Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocity, sf::Vector2f& dimension, float* sepWeight, float* cohWeight, float* allWeight, int detectionRadius, int id) :
+int   Boid::m_boidCount = 0;
+float Boid::m_separationWeight;
+float Boid::m_cohesionWeight;
+float Boid::m_allignmentWeight;
+
+Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocity, sf::Vector2f& dimension, int detectionRadius) :
 	m_window(window),
 	m_dimension(dimension),
 	m_position(position), m_velocity(velocity),
 	m_detectionRadius(detectionRadius), m_detectionCone((270 * M_PI) / 180),
 	m_boidsInRange(),
-	m_sepWeight(sepWeight), m_cohWeight(cohWeight), m_allWeight(allWeight),
 	m_maxSpeed(MAX_SPEED), m_maxSteer(MAX_STEER),
-	m_id(id),
+	m_id(m_boidCount++),
 	m_boidTexture("resources/boid.png"),
 	m_boidSprite(m_boidTexture)
 {
@@ -20,6 +24,21 @@ Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocit
 
 	sf::FloatRect bounds = m_boidSprite.getLocalBounds();
 	m_boidSprite.setOrigin(sf::Vector2f(bounds.size.x / 2, bounds.size.y / 2));
+}
+
+void Boid::setSeparationWeight(float weight)
+{
+	m_separationWeight = weight;
+}
+
+void Boid::setCohesionWeight(float weight)
+{
+	m_cohesionWeight = weight;
+}
+
+void Boid::setAllignmentWeight(float weight)
+{
+	m_allignmentWeight = weight;
 }
 
 sf::Vector2f Boid::getPoint() const
@@ -171,7 +190,7 @@ void Boid::updateVelocity(Quadtree& quadtree, const std::vector<std::shared_ptr<
 
 	m_saveInCone(quadtree, boids);
 
-	sf::Vector2f steer = m_seperation(boids) + m_cohesion(boids) + m_allignment(boids);
+	sf::Vector2f steer = m_separation(boids) + m_cohesion(boids) + m_allignment(boids);
 
 	m_velocity += steer;
 
@@ -179,7 +198,7 @@ void Boid::updateVelocity(Quadtree& quadtree, const std::vector<std::shared_ptr<
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
-sf::Vector2f Boid::m_seperation(const std::vector<std::shared_ptr<Boid>>& boids)
+sf::Vector2f Boid::m_separation(const std::vector<std::shared_ptr<Boid>>& boids)
 {
 	sf::Vector2f desiredVelocity;
 
@@ -203,7 +222,7 @@ sf::Vector2f Boid::m_seperation(const std::vector<std::shared_ptr<Boid>>& boids)
 
 	sf::Vector2f steer = desiredVelocity - m_velocity;
 
-	return steer * *m_sepWeight * m_maxSteer;
+	return steer * m_separationWeight * m_maxSteer;
 }
 
 sf::Vector2f Boid::m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids)
@@ -236,7 +255,7 @@ sf::Vector2f Boid::m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids)
 
 	sf::Vector2f steer = desiredVelocity - m_velocity;
 
-	return steer * *m_cohWeight * m_maxSteer;
+	return steer * m_cohesionWeight * m_maxSteer;
 }
 
 sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
@@ -265,7 +284,7 @@ sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
 
 	sf::Vector2f steer = desiredVelocity - m_velocity;
 
-	return steer * *m_allWeight * m_maxSteer;
+	return steer * m_allignmentWeight * m_maxSteer;
 }
 
 bool Boid::m_inCone(const std::shared_ptr<Boid> boid)
@@ -300,10 +319,10 @@ bool Boid::m_inCone(const std::shared_ptr<Boid> boid)
 void Boid::m_saveInCone(Quadtree& quadtree, const std::vector<std::shared_ptr<Boid>>& boids)
 {
 	m_boidsInRange.clear();
-	sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
-		{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
+	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
+	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
 
-	std::vector<std::shared_ptr<Boid>> possibleInRange = quadtree.search(area);
+	std::vector<std::shared_ptr<Boid>> possibleInRange = quadtree.search(m_position);
 
 	for (auto boid : possibleInRange)
 	{

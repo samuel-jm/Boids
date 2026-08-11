@@ -14,16 +14,15 @@ public:
 	void remove(std::shared_ptr<Boid> boid);
 	void clear();
 
-	std::vector<std::shared_ptr<Boid>> search(const sf::FloatRect& area);
+	std::vector<std::shared_ptr<Boid>> search(const sf::Vector2f& boidPosition);
 
 	const sf::FloatRect& getBounds() const;
 
 	void drawDebug(sf::RenderWindow& window);
 
 private:
-	void m_search(const sf::FloatRect& area,
-		std::vector<std::shared_ptr<Boid>>& overlappingObjects);
-	int m_getChildIndexForObjects(const sf::FloatRect& boidPosition);
+	std::vector<std::shared_ptr<Boid>> m_search(const sf::Vector2f& boidPosition);
+	int m_getChildIndexForObjects(const sf::Vector2f& boidPosition);
 	void m_split();
 
 	static const int m_thisTree = -1;

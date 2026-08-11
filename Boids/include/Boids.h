@@ -27,19 +27,16 @@ private:
 	sf::Vector2f* m_dimension;
 
 	sf::Font m_font;
-	sf::Text m_sepText;
-	sf::Text m_cohText;
-	sf::Text m_allText;
+	sf::Text m_separationText;
+	sf::Text m_cohesionText;
+	sf::Text m_allignmentText;
+	sf::Text m_fpsText;
 
-	Slider m_sep;
-	Slider m_coh;
-	Slider m_all;
+	Slider m_separation;
+	Slider m_cohesion;
+	Slider m_allignment;
 
 	Quadtree m_quadtree;
-
-	float* m_sepWeight;
-	float* m_cohWeight;
-	float* m_allWeight;
 
 	float m_deltaTime;
 

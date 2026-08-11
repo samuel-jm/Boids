@@ -169,6 +169,9 @@
   <ItemGroup>
     <Font Include="fonts\arial.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Utilities.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -7,10 +7,10 @@ Quadtree::Quadtree(int maxBoids, int maxLevels, int level, sf::FloatRect bounds,
 
 void Quadtree::insert(std::shared_ptr<Boid> boid)
 {
-	if (!m_bounds.contains(boid->getPoint()))
-	{
-		return;
-	}
+	//if (!m_bounds.contains(boid->getPoint()))
+	//{
+	//	return;
+	//}
 
 	if (m_children[0] != nullptr)
 	{
@@ -18,7 +18,7 @@ void Quadtree::insert(std::shared_ptr<Boid> boid)
 			{ boid->getRadius() * 2.f, boid->getRadius() * 2.f });
 
 		int indexToPlaceObject =
-			m_getChildIndexForObjects(area);
+			m_getChildIndexForObjects(boid->getPoint());
 		if (indexToPlaceObject != m_thisTree)
 		{
 			m_children[indexToPlaceObject]->insert(boid);
@@ -28,7 +28,7 @@ void Quadtree::insert(std::shared_ptr<Boid> boid)
 
 	m_boids.emplace_back(boid);
 
-	if (m_boids.size() > m_maxObjects && m_level < m_maxLevels && m_children[0] == nullptr)
+	if ((m_boids.size() > m_maxObjects) && (m_level < m_maxLevels) && (m_children[0] == nullptr))
 	{
 		m_split();
 		auto it = m_boids.begin();
@@ -38,7 +38,7 @@ void Quadtree::insert(std::shared_ptr<Boid> boid)
 				{ boid->getRadius() * 2.f, boid->getRadius() * 2.f });
 
 			auto obj = *it;
-			int indexToPlaceObject = m_getChildIndexForObjects(area);
+			int indexToPlaceObject = m_getChildIndexForObjects(boid->getPoint());
 			if (indexToPlaceObject != m_thisTree)
 			{
 				m_children[indexToPlaceObject]->insert(obj);
@@ -55,7 +55,7 @@ void Quadtree::remove(std::shared_ptr<Boid> boid)
 	sf::FloatRect area({ boid->getPoint().x - boid->getRadius(), boid->getPoint().y - boid->getRadius() },
 		{ boid->getRadius() * 2.f, boid->getRadius() * 2.f });
 
-	int index = m_getChildIndexForObjects(area);
+	int index = m_getChildIndexForObjects(boid->getPoint());
 	if (index == m_thisTree || m_children[index] == nullptr)
 	{
 		for (int i = 0; i < m_boids.size(); i++)
@@ -84,21 +84,9 @@ void Quadtree::clear()
 	}
 }
 
-std::vector<std::shared_ptr<Boid>> Quadtree::search(const sf::FloatRect& area)
+std::vector<std::shared_ptr<Boid>> Quadtree::search(const sf::Vector2f& boidPosition)
 {
-	std::vector<std::shared_ptr<Boid>> possibleOverlaps;
-	m_search(area, possibleOverlaps);
-
-	std::vector<std::shared_ptr<Boid>> returnList;
-
-	for (auto possibleBoid : possibleOverlaps)
-	{
-		if (area.contains(possibleBoid->getPoint()))
-	  {
-			returnList.emplace_back(possibleBoid);
-		}
-	}
-	return returnList;
+	return m_children[0] == nullptr ? m_boids : m_search(boidPosition);
 }
 
 const sf::FloatRect& Quadtree::getBounds() const
@@ -128,55 +116,34 @@ void Quadtree::drawDebug(sf::RenderWindow& window)
 	window.draw(shape);
 }
 
-void Quadtree::m_search(const sf::FloatRect& area, std::vector<std::shared_ptr<Boid>>& overlappingObjects)
+std::vector<std::shared_ptr<Boid>> Quadtree::m_search(const sf::Vector2f& boidPosition)
 {
-	overlappingObjects.insert(overlappingObjects.end(), m_boids.begin(), m_boids.end());
 	if (m_children[0] != nullptr)
 	{
-		int index = m_getChildIndexForObjects(area);
-		if (index == m_thisTree)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				if (m_children[i]->getBounds().findIntersection(area) != std::nullopt)
-				{
-					m_children[i]->m_search(area, overlappingObjects);
-				}
-			}
-		}
-		else
-		{
-			m_children[index]->m_search(area, overlappingObjects);
-		}
+		int index = m_getChildIndexForObjects(boidPosition);
+		return m_children[index]->m_search(boidPosition);
+	}
+	else {
+		return m_boids;
 	}
 }
 
-int Quadtree::m_getChildIndexForObjects(const sf::FloatRect& boidPosition)
+int Quadtree::m_getChildIndexForObjects(const sf::Vector2f& boidPosition)
 {
 	int index = -1;
 	double verticalDividingLine = m_bounds.position.x + m_bounds.size.x * 0.5f;
 	double horizontalDividingLine = m_bounds.position.y + m_bounds.size.y * 0.5f;
 
-	bool north = boidPosition.position.y < horizontalDividingLine &&
-		(boidPosition.size.y + boidPosition.position.y < horizontalDividingLine);
-	bool south = boidPosition.position.y > horizontalDividingLine;
-	bool west = boidPosition.position.x < verticalDividingLine &&
-		(boidPosition.position.x + boidPosition.size.x < verticalDividingLine);
-	bool east = boidPosition.position.x > verticalDividingLine;
+	bool north = boidPosition.y < horizontalDividingLine;
+	bool east = boidPosition.x > verticalDividingLine;
 
 	if (east)
 	{
-		if (north)
-			index = m_childNE;
-		else if (south)
-			index = m_childSE;
+		index = north ? m_childNE : m_childSE;
 	}
-	else if (west)
+	else
 	{
-		if (north)
-			index = m_childNW;
-		else if (south)
-			index = m_childSW;
+		index = north ? m_childNW : m_childSW;
 	}
 
 	return index;
