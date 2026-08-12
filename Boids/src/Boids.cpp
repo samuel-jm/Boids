@@ -4,13 +4,13 @@ Boids::Boids() :
 	m_dimension(new sf::Vector2f(1200, 1000)),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
 	m_clock(), m_deltaTime(0),
-	m_quadtree(15, 5, 0, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y}}, nullptr),
+	m_quadtree(15, 5, 0, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y} }, nullptr),
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
 	m_separation(sf::IntRect({ 20, 20 }, { 200, 10 })), m_cohesion(sf::IntRect({ 240, 20 }, { 200, 10 })), m_allignment(sf::IntRect({ 460, 20 }, { 200, 10 }))
 {
-	for (int i = 0; i < 1500; i++)
+	for (int i = 0; i < 150; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
 		sf::Vector2f velocity(std::rand() % 300 - 150, std::rand() % 300 - 150);
@@ -19,6 +19,8 @@ Boids::Boids() :
 	Boid::setSeparationWeight(1.0f);
 	Boid::setCohesionWeight(1.0f);
 	Boid::setAllignmentWeight(1.0f);
+
+	m_diskGraph.init(m_boids, 30, m_window.getSize());
 
 	m_separationText.setString("Separation");
 	m_cohesionText.setString("Cohesion");
@@ -58,6 +60,7 @@ void Boids::run()
 				m_dimension->y = resizedEvent->size.y;
 				
 				m_window.setView(sf::View(sf::FloatRect({ 0, 0 }, { m_dimension->x, m_dimension->y })));
+				m_diskGraph.setGridSize(m_window.getSize());
 			}
 			if (event->is<sf::Event::MouseButtonPressed>())
 			{
@@ -112,7 +115,12 @@ void Boids::m_draw()
 	m_cohesion.draw(m_window);
 	m_allignment.draw(m_window);
 
-	if (DEBUG) m_quadtree.drawDebug(m_window);
+	if (DEBUG)
+	{
+		//m_quadtree.drawDebug(m_window);
+		m_diskGraph.setBoids(m_boids, 30);
+		m_diskGraph.drawDebug(m_window);
+	}
 
 	m_drawText();
 }
@@ -130,7 +138,7 @@ void Boids::m_updateVelocity(float deltaTime)
 	m_updateTree();
 	for (auto boid : m_boids)
 	{
-		boid->updateVelocity(m_quadtree, m_boids, deltaTime);
+		boid->updateVelocity(m_diskGraph, m_boids, deltaTime);
 	}
 }
 
@@ -141,4 +149,5 @@ void Boids::m_updateTree()
 	{
 		m_quadtree.insert(boid);
 	}
+
 }

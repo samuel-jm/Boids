@@ -4,6 +4,8 @@
 
 #include "SFML/Graphics.hpp"
 #include "Utilities.inl"
+//#include "DiskGraph.h"
+//#include "Quadtree.h"
 
 #include <iostream>
 #include <algorithm>
@@ -12,6 +14,7 @@ const float MAX_SPEED = 150.f;
 const float MAX_STEER = 2.f;
 
 class Quadtree;
+class DiskGraph;
 class Boid
 {
 public:
@@ -25,6 +28,7 @@ public:
 	float getRadius() const;
 	int getID();
 	void updateVelocity(Quadtree& quadtree, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
+	void updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
 	void draw(bool debug, float deltaTime);
 	void debugDraw();
 
@@ -54,5 +58,6 @@ private:
 	sf::Vector2f m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids);
 	bool m_inCone(const std::shared_ptr<Boid> boid);
 	void m_saveInCone(Quadtree& quadtree, const std::vector<std::shared_ptr<Boid>>& boids);
+	void m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids);
 	inline void m_clamp(float& pos, int min, int max);
 };

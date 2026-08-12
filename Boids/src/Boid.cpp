@@ -1,5 +1,6 @@
 #include "Boid.h"
 #include "Quadtree.h"
+#include "DiskGraph.h"
 
 int   Boid::m_boidCount = 0;
 float Boid::m_separationWeight;
@@ -198,6 +199,21 @@ void Boid::updateVelocity(Quadtree& quadtree, const std::vector<std::shared_ptr<
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
+void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
+{
+	m_maxSpeed = MAX_SPEED * deltaTime;
+	m_maxSteer = MAX_STEER * deltaTime;
+
+	m_saveInCone(diskGraph, boids);
+
+	sf::Vector2f steer = m_separation(boids) + m_cohesion(boids) + m_allignment(boids);
+
+	m_velocity += steer;
+
+	m_velocity = normalise(m_velocity) * MAX_SPEED;
+	m_velocity = limit(m_velocity, MAX_SPEED);
+}
+
 sf::Vector2f Boid::m_separation(const std::vector<std::shared_ptr<Boid>>& boids)
 {
 	sf::Vector2f desiredVelocity;
@@ -323,6 +339,24 @@ void Boid::m_saveInCone(Quadtree& quadtree, const std::vector<std::shared_ptr<Bo
 	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
 
 	std::vector<std::shared_ptr<Boid>> possibleInRange = quadtree.search(m_position);
+
+	for (auto boid : possibleInRange)
+	{
+		sf::Vector2f diff(m_position - boid->m_position);
+		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+		if (boid->getPoint() != getPoint() && distance < m_detectionRadius && m_inCone(boid))
+			m_boidsInRange.push_back(boid);
+	}
+}
+
+void Boid::m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids)
+{
+	m_boidsInRange.clear();
+	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
+	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
+
+	std::vector<std::shared_ptr<Boid>> possibleInRange = diskGraph.search(m_position);
 
 	for (auto boid : possibleInRange)
 	{

@@ -26,6 +26,9 @@
     <ClCompile Include="src\Slider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\DiskGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Boids.h">
@@ -40,6 +43,9 @@
     <ClInclude Include="include\Slider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\DiskGraph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\boid.png" />
@@ -47,5 +53,10 @@
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\arial.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Utilities.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

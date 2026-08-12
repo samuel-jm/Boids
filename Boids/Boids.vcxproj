@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DiskGraph.cpp" />
     <ClCompile Include="src\Slider.cpp" />
     <ClCompile Include="src\Quadtree.cpp" />
     <ClCompile Include="src\Boid.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\DiskGraph.h" />
     <ClInclude Include="include\Boid.h" />
     <ClInclude Include="include\Boids.h" />
     <ClInclude Include="include\Quadtree.h" />

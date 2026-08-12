@@ -3,11 +3,12 @@
 #include "Boid.h"
 #include "Quadtree.h"
 #include "Slider.h"
+#include "DiskGraph.h"
 
 #include <iostream>
 #include <random>
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 class Boids
 {
@@ -37,6 +38,7 @@ private:
 	Slider m_allignment;
 
 	Quadtree m_quadtree;
+	DiskGraph m_diskGraph;
 
 	float m_deltaTime;
 
