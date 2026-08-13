@@ -23,9 +23,6 @@
     <ClCompile Include="src\Quadtree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Slider.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\DiskGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,7 +37,7 @@
     <ClInclude Include="include\Quadtree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Slider.h">
+    <ClInclude Include="include\Slider.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\DiskGraph.h">

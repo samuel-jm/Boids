@@ -2,7 +2,7 @@
 
 #include "Boid.h"
 #include "Quadtree.h"
-#include "Slider.h"
+#include "Slider.inl"
 #include "DiskGraph.h"
 
 #include <iostream>
@@ -33,9 +33,9 @@ private:
 	sf::Text m_allignmentText;
 	sf::Text m_fpsText;
 
-	Slider m_separation;
-	Slider m_cohesion;
-	Slider m_allignment;
+	Slider<float> m_separation;
+	Slider<float> m_cohesion;
+	Slider<float> m_allignment;
 
 	Quadtree m_quadtree;
 	DiskGraph m_diskGraph;

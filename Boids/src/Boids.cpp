@@ -1,5 +1,9 @@
 #include "Boids.h"
 
+const float INITIAL_SEPARATION = 1.f;
+const float INITIAL_COHESION = 0.3f;
+const float INITIAL_ALLIGNMENT = 1.f;
+
 Boids::Boids() :
 	m_dimension(new sf::Vector2f(1200, 1000)),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
@@ -8,17 +12,19 @@ Boids::Boids() :
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
-	m_separation(sf::IntRect({ 20, 20 }, { 200, 10 })), m_cohesion(sf::IntRect({ 240, 20 }, { 200, 10 })), m_allignment(sf::IntRect({ 460, 20 }, { 200, 10 }))
+	m_separation({ 20, 20 }, { 200, 10 }, 0.f, 1.f, INITIAL_SEPARATION),
+	m_cohesion({ 240, 20 }, { 200, 10 }, 0.f, 0.5f, INITIAL_COHESION),
+	m_allignment({ 460, 20 }, { 200, 10 }, 0.f, 2.f, INITIAL_ALLIGNMENT)
 {
 	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
-		sf::Vector2f velocity(std::rand() % 300 - 150, std::rand() % 300 - 150);
+		sf::Vector2f velocity(std::rand() % 301 - 150, std::rand() % 301 - 150);
 		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, *m_dimension, 30));
 	}
-	Boid::setSeparationWeight(1.6f);
-	Boid::setCohesionWeight(0.6f);
-	Boid::setAllignmentWeight(1.0f);
+	Boid::setSeparationWeight(INITIAL_SEPARATION);
+	Boid::setCohesionWeight(INITIAL_COHESION);
+	Boid::setAllignmentWeight(INITIAL_ALLIGNMENT);
 
 	m_diskGraph.init(m_boids, 30, m_window.getSize());
 
@@ -65,11 +71,11 @@ void Boids::run()
 			if (event->is<sf::Event::MouseButtonPressed>())
 			{
 				sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
-				if (m_separation.getArea().contains(mousePos))
+				if (m_separation.mouseOver(mousePos))
 					separation = true;
-				else if (m_cohesion.getArea().contains(mousePos))
+				else if (m_cohesion.mouseOver(mousePos))
 					cohesion = true;
-				else if (m_allignment.getArea().contains(mousePos))
+				else if (m_allignment.mouseOver(mousePos))
 					allignment = true;
 			}
 			if (event->is<sf::Event::MouseButtonReleased>())
@@ -77,21 +83,20 @@ void Boids::run()
 			if ((separation || cohesion || allignment) && event->is<sf::Event::MouseMoved>())
 			{
 				sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
-				std::cout << mousePos.x << std::endl;
 				if (separation)
 				{
-					m_separation.setValue(mousePos.x);
-					Boid::setSeparationWeight(m_separation.getValue() / 100.f);
+					m_separation.update(mousePos);
+					Boid::setSeparationWeight(m_separation.getValue());
 				}
 				else if (cohesion)
 				{
-					m_cohesion.setValue(mousePos.x);
-					Boid::setCohesionWeight(m_cohesion.getValue() / 100.f);
+					m_cohesion.update(mousePos);
+					Boid::setCohesionWeight(m_cohesion.getValue());
 				}
 				else if (allignment)
 				{
-					m_allignment.setValue(mousePos.x);
-					Boid::setAllignmentWeight(m_allignment.getValue() / 100.f);
+					m_allignment.update(mousePos);
+					Boid::setAllignmentWeight(m_allignment.getValue());
 				}
 			}
 		}
@@ -136,11 +141,11 @@ void Boids::m_drawText()
 
 void Boids::m_updateVelocity(float deltaTime)
 {
-	m_updateTree();
 	for (auto boid : m_boids)
 	{
 		boid->updateVelocity(m_diskGraph, m_boids, deltaTime);
 	}
+	m_updateTree();
 }
 
 void Boids::m_updateTree()
