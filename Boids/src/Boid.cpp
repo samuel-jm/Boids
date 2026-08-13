@@ -95,7 +95,7 @@ void Boid::debugDraw()
 			sf::VertexArray line(sf::PrimitiveType::Lines);
 			sf::Vertex vertex;
 			vertex.position = sf::Vector2f(m_position.x, m_position.y);
-			vertex.color = sf::Color::Red;
+			vertex.color = sf::Color::Transparent;
 			line.append(vertex);
 
 			vertex.position = sf::Vector2f(
@@ -168,6 +168,24 @@ void Boid::debugDraw()
 		};
 		m_window.draw(velocity, 2, sf::PrimitiveType::Lines);
 	}
+
+	if (steer) //boid velocity
+	{
+		sf::Vertex velocity[] =
+		{
+			sf::Vertex({ {m_position}, {sf::Color::Magenta} }),
+			sf::Vertex({ {m_position + m_steer}, {sf::Color::Magenta} })
+		};
+		m_window.draw(velocity, 2, sf::PrimitiveType::Lines);
+
+		if (m_boidsInRange.size() == 0)
+		{
+			sf::Color tmp = m_boidSprite.getColor();
+			m_boidSprite.setColor(sf::Color::Green);
+			m_window.draw(m_boidSprite);
+			m_boidSprite.setColor(tmp);
+		}
+	}
 }
 
 void Boid::m_updatePosition(float deltaTime)
@@ -208,6 +226,9 @@ void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_pt
 	sf::Vector2f cohesion(m_cohesion(boids));
 	sf::Vector2f allignment(m_allignment(boids));
 	sf::Vector2f steer = separation + cohesion + allignment;
+	m_steer = steer;
+
+	//m_velocity = m_velocity.rotatedBy(m_velocity.angleTo(steer) / 30.f);
 
 	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
 	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
