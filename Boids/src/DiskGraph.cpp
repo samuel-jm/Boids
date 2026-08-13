@@ -21,13 +21,13 @@ void DiskGraph::setGridSize(sf::Vector2u windowSize, bool updateGrid) {
 
 std::vector<std::shared_ptr<Boid>> DiskGraph::search(const sf::Vector2f& boidPosition)
 {
-	sf::Vector2u gridCell = { unsigned(boidPosition.x / (2 * m_radius)), unsigned(boidPosition.y / (2 * m_radius)) };
+	sf::Vector2i gridCell = { int(boidPosition.x / (2 * m_radius)), int(boidPosition.y / (2 * m_radius)) };
 
 	std::vector<std::shared_ptr<Boid>> output;
 	for (int y = gridCell.y - 1; y <= gridCell.y + 1; y++) {
 		if (y < 0 || y >= m_gridSize.y) continue;
 		for (int x = gridCell.x - 1; x <= gridCell.x + 1; x++) {
-			if (x < 0 || x >= m_gridSize.x || m_integerGrid[{x,y}].size() == 0) continue;
+			if (x < 0 || x >= m_gridSize.x || m_integerGrid[{x, y}].size() == 0) continue;
 			std::vector<std::shared_ptr<Boid>> boidSet;
 			for (auto it = m_integerGrid[{x,y}].begin(); it != m_integerGrid[{x,y}].end(); it++) {
 				boidSet.push_back(*it);
