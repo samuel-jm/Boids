@@ -11,7 +11,8 @@
 #include <algorithm>
 
 const float MAX_SPEED = 150.f;
-const float MAX_STEER = 2.f;
+const float STEER_MULTIPLIER = 30.f;
+const float ACCELERATION = 50.f;
 
 class Quadtree;
 class DiskGraph;
@@ -43,12 +44,13 @@ private:
 	sf::Sprite m_boidSprite;
 	sf::Vector2f m_position;
 	sf::Vector2f m_velocity;
+	sf::Vector2f m_steer;
 	sf::Vector2f& m_dimension;
 	std::vector<std::shared_ptr<Boid>> m_boidsInRange;
+	sf::Angle m_detectionAngle; // The angle within which the boid can detect other boids, with the potential blind-spot being behind the boid
 
 	int m_id;
 	int m_detectionRadius;
-	float m_detectionCone;
 	float m_maxSpeed;
 	float m_maxSteer;
 

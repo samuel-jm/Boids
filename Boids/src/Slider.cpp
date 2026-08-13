@@ -1,7 +1,7 @@
 #include "Slider.h"
 
-Slider::Slider(sf::IntRect area) :
-	m_value(1), m_min(area.position.x), m_max(area.position.x + area.size.x)
+Slider::Slider(sf::IntRect area, int defaultValue) :
+	m_value(defaultValue), m_min(area.position.x), m_max(area.position.x + area.size.x)
 {
 	m_barLight = sf::RectangleShape(sf::Vector2f(area.size.x / 2, area.size.y));
 	m_barDark = sf::RectangleShape(sf::Vector2f(area.size.x, area.size.y));

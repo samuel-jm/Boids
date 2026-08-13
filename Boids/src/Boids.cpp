@@ -10,14 +10,14 @@ Boids::Boids() :
 	m_fpsText(m_font),
 	m_separation(sf::IntRect({ 20, 20 }, { 200, 10 })), m_cohesion(sf::IntRect({ 240, 20 }, { 200, 10 })), m_allignment(sf::IntRect({ 460, 20 }, { 200, 10 }))
 {
-	for (int i = 0; i < 150; i++)
+	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
 		sf::Vector2f velocity(std::rand() % 300 - 150, std::rand() % 300 - 150);
 		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, *m_dimension, 30));
 	}
-	Boid::setSeparationWeight(1.0f);
-	Boid::setCohesionWeight(1.0f);
+	Boid::setSeparationWeight(1.6f);
+	Boid::setCohesionWeight(0.6f);
 	Boid::setAllignmentWeight(1.0f);
 
 	m_diskGraph.init(m_boids, 30, m_window.getSize());
@@ -77,6 +77,7 @@ void Boids::run()
 			if ((separation || cohesion || allignment) && event->is<sf::Event::MouseMoved>())
 			{
 				sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+				std::cout << mousePos.x << std::endl;
 				if (separation)
 				{
 					m_separation.setValue(mousePos.x);
@@ -118,8 +119,8 @@ void Boids::m_draw()
 	if (DEBUG)
 	{
 		//m_quadtree.drawDebug(m_window);
-		m_diskGraph.setBoids(m_boids, 30);
-		m_diskGraph.drawDebug(m_window);
+		//m_diskGraph.setBoids(m_boids, 30);
+		//m_diskGraph.drawDebug(m_window);
 	}
 
 	m_drawText();
@@ -149,5 +150,5 @@ void Boids::m_updateTree()
 	{
 		m_quadtree.insert(boid);
 	}
-
+	m_diskGraph.setBoids(m_boids, 30);
 }

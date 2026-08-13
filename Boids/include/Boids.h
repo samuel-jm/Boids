@@ -8,7 +8,7 @@
 #include <iostream>
 #include <random>
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 class Boids
 {

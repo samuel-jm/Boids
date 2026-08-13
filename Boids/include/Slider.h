@@ -7,7 +7,7 @@
 class Slider
 {
 public:
-	Slider(sf::IntRect area);
+	Slider(sf::IntRect area, int defaultValue = 1);
 
 	void setValue(int val);
 	float getValue();

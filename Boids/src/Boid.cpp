@@ -11,9 +11,9 @@ Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocit
 	m_window(window),
 	m_dimension(dimension),
 	m_position(position), m_velocity(velocity),
-	m_detectionRadius(detectionRadius), m_detectionCone((270 * M_PI) / 180),
+	m_detectionRadius(detectionRadius), m_detectionAngle(sf::degrees(270)),
 	m_boidsInRange(),
-	m_maxSpeed(MAX_SPEED), m_maxSteer(MAX_STEER),
+	m_maxSpeed(MAX_SPEED), m_maxSteer(STEER_MULTIPLIER),
 	m_id(m_boidCount++),
 	m_boidTexture("resources/boid.png"),
 	m_boidSprite(m_boidTexture)
@@ -63,9 +63,10 @@ void Boid::draw(bool debug, float deltaTime)
 void Boid::debugDraw()
 {
 	bool cone(true);
-	bool line(false);
+	bool line(true);
 	bool dot(false);
 	bool velocity(false);
+	bool steer(true);
 
 	sf::Vertex vertex;
 	if (cone) //LoS cone
@@ -75,12 +76,11 @@ void Boid::debugDraw()
 
 		vertex.position = sf::Vector2f(m_position.x, m_position.y);
 		detectionCone.append(vertex);
-		for (float i = -m_detectionCone / 2 - M_PI_2; i < m_detectionCone / 2 - M_PI_2; i += 0.1f)
+		float detectionAngleDegrees = m_detectionAngle.asDegrees();
+		for (float i = -detectionAngleDegrees / 2.f; i <= detectionAngleDegrees / 2.f; i += detectionAngleDegrees / 10.f)
 		{
-			sf::Angle angle = sf::Angle(sf::radians(i));
-			vertex.position = sf::Vector2f(
-				m_position.x + std::cos((angle + rotation).asRadians()) * m_detectionRadius,
-				m_position.y + std::sin((angle + rotation).asRadians()) * m_detectionRadius);
+			sf::Angle angle = sf::Angle(sf::degrees(i));
+			vertex.position = float(m_detectionRadius) * m_velocity.normalized().rotatedBy(angle) + m_position;
 			detectionCone.append(vertex);
 		}
 		vertex.position = sf::Vector2f(m_position.x, m_position.y);
@@ -95,69 +95,69 @@ void Boid::debugDraw()
 			sf::VertexArray line(sf::PrimitiveType::Lines);
 			sf::Vertex vertex;
 			vertex.position = sf::Vector2f(m_position.x, m_position.y);
-			vertex.color = sf::Color::Blue;
+			vertex.color = sf::Color::Red;
 			line.append(vertex);
 
 			vertex.position = sf::Vector2f(
 				boid->m_position.x,
 				boid->m_position.y);
-			vertex.color = sf::Color::Transparent;
+			vertex.color = sf::Color::Red;
 			line.append(vertex);
 			m_window.draw(line);
 		}
 	}
 
-	if (dot) //Lines inside cone using dot product
-	{
-		sf::Angle rotation(sf::radians(m_boidSprite.getRotation().asRadians()));
+	//if (dot) //Lines inside cone using dot product
+	//{
+	//	sf::Angle rotation(sf::radians(m_boidSprite.getRotation().asRadians()));
 
-		sf::Angle angle1(sf::radians(m_detectionCone / 2 - M_PI_2));
-		sf::Angle angle2(sf::radians(-m_detectionCone / 2 - M_PI_2));
-		sf::Vector2f detectionPointOne(std::cos((angle1 + rotation).asRadians()),
-			std::sin((angle2 + rotation).asRadians()));
+	//	sf::Angle angle1(sf::radians(m_detectionCone / 2 - M_PI_2));
+	//	sf::Angle angle2(sf::radians(-m_detectionCone / 2 - M_PI_2));
+	//	sf::Vector2f detectionPointOne(std::cos((angle1 + rotation).asRadians()),
+	//		std::sin((angle2 + rotation).asRadians()));
 
-		sf::Vector2f detectionPointTwo(std::cos((angle2 + rotation).asRadians()),
-			std::sin((angle2 + rotation).asRadians()));
+	//	sf::Vector2f detectionPointTwo(std::cos((angle2 + rotation).asRadians()),
+	//		std::sin((angle2 + rotation).asRadians()));
 
-		sf::Vector2f detectionPointOneReciprocal(-reciprocal(-detectionPointOne).x, -reciprocal(detectionPointOne).y);
-		sf::Vector2f detectionPointTwoReciprocal(-reciprocal(detectionPointTwo).x, -reciprocal(-detectionPointTwo).y);
+	//	sf::Vector2f detectionPointOneReciprocal(-reciprocal(-detectionPointOne).x, -reciprocal(detectionPointOne).y);
+	//	sf::Vector2f detectionPointTwoReciprocal(-reciprocal(detectionPointTwo).x, -reciprocal(-detectionPointTwo).y);
 
-		sf::VertexArray insideDetection(sf::PrimitiveType::LineStrip);
+	//	sf::VertexArray insideDetection(sf::PrimitiveType::LineStrip);
 
-		vertex.position = sf::Vector2f(m_position.x, m_position.y);
-		vertex.color = sf::Color::Transparent;
-		insideDetection.append(vertex);
-		for (float i = 0.f; i < 2.f * M_PI; i += 0.1f)
-		{
-			float x = std::cos(i);
-			float y = std::sin(i);
+	//	vertex.position = sf::Vector2f(m_position.x, m_position.y);
+	//	vertex.color = sf::Color::Transparent;
+	//	insideDetection.append(vertex);
+	//	for (float i = 0.f; i < 2.f * M_PI; i += 0.1f)
+	//	{
+	//		float x = std::cos(i);
+	//		float y = std::sin(i);
 
-			bool dotOne = detectionPointOneReciprocal.x * x + detectionPointOneReciprocal.y * y > 0;
-			bool dotTwo = detectionPointTwoReciprocal.x * x + detectionPointTwoReciprocal.y * y > 0;
-			bool inCone = m_detectionCone > M_PI ? dotOne || dotTwo : dotOne && dotTwo;
+	//		bool dotOne = detectionPointOneReciprocal.x * x + detectionPointOneReciprocal.y * y > 0;
+	//		bool dotTwo = detectionPointTwoReciprocal.x * x + detectionPointTwoReciprocal.y * y > 0;
+	//		bool inCone = m_detectionCone > M_PI ? dotOne || dotTwo : dotOne && dotTwo;
 
-			if (inCone)
-			{
-				vertex.position = sf::Vector2f(
-					m_position.x + x * m_detectionRadius,
-					m_position.y + y * m_detectionRadius);
-				vertex.color = sf::Color::Green;
-				insideDetection.append(vertex);
+	//		if (inCone)
+	//		{
+	//			vertex.position = sf::Vector2f(
+	//				m_position.x + x * m_detectionRadius,
+	//				m_position.y + y * m_detectionRadius);
+	//			vertex.color = sf::Color::Green;
+	//			insideDetection.append(vertex);
 
-				vertex.position = sf::Vector2f(
-					m_position.x,
-					m_position.y);
-				vertex.color = sf::Color::Transparent;
-				insideDetection.append(vertex);
-			}
-		}
-		vertex.position = sf::Vector2f(
-			m_position.x,
-			m_position.y);
-		vertex.color = sf::Color::Green;
-		insideDetection.append(vertex);
-		m_window.draw(insideDetection);
-	}
+	//			vertex.position = sf::Vector2f(
+	//				m_position.x,
+	//				m_position.y);
+	//			vertex.color = sf::Color::Transparent;
+	//			insideDetection.append(vertex);
+	//		}
+	//	}
+	//	vertex.position = sf::Vector2f(
+	//		m_position.x,
+	//		m_position.y);
+	//	vertex.color = sf::Color::Green;
+	//	insideDetection.append(vertex);
+	//	m_window.draw(insideDetection);
+	//}
 
 	if (velocity) //boid velocity
 	{
@@ -187,149 +187,93 @@ void Boid::m_updatePosition(float deltaTime)
 void Boid::updateVelocity(Quadtree& quadtree, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
 {
 	m_maxSpeed = MAX_SPEED * deltaTime;
-	m_maxSteer = MAX_STEER * deltaTime;
+	//m_maxSteer = MAX_STEER * deltaTime;
 
 	m_saveInCone(quadtree, boids);
 
 	sf::Vector2f steer = m_separation(boids) + m_cohesion(boids) + m_allignment(boids);
+	steer = m_separation(boids);
 
-	m_velocity += steer;
+	m_velocity += steer * m_maxSteer;
 
-	m_velocity = normalise(m_velocity) * MAX_SPEED;
+	//m_velocity = normalise(m_velocity) * MAX_SPEED;
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
 void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
 {
-	m_maxSpeed = MAX_SPEED * deltaTime;
-	m_maxSteer = MAX_STEER * deltaTime;
-
 	m_saveInCone(diskGraph, boids);
 
-	sf::Vector2f steer = m_separation(boids) + m_cohesion(boids) + m_allignment(boids);
+	sf::Vector2f separation(m_separation(boids));
+	sf::Vector2f cohesion(m_cohesion(boids));
+	sf::Vector2f allignment(m_allignment(boids));
+	sf::Vector2f steer = separation + cohesion + allignment;
 
-	m_velocity += steer;
+	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
+	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
 
-	m_velocity = normalise(m_velocity) * MAX_SPEED;
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
 sf::Vector2f Boid::m_separation(const std::vector<std::shared_ptr<Boid>>& boids)
 {
-	sf::Vector2f desiredVelocity;
+	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
-	int count = 0;
+	sf::Vector2f separationVelocity;
+
 	for (auto boid : m_boidsInRange)
 	{
-		sf::Vector2f diff(m_position - boid->m_position);
+		sf::Vector2f boidToPosition(m_position - boid->m_position);
 
-		if (std::abs(diff.x) > 0.001f)
-			desiredVelocity.x += 1.f / diff.x;
-		if (std::abs(diff.y) > 0.001f)
-			desiredVelocity.y += 1.f / diff.y;
-		count++;
+		// The closer the boids are, the more they repel each other
+		separationVelocity += boidToPosition.normalized() * (m_detectionRadius - boidToPosition.length());
 	}
+	separationVelocity /= float(m_boidsInRange.size());
 
-	if (count)
-	{
-		desiredVelocity /= (float)count;
-		desiredVelocity = normalise(desiredVelocity) * MAX_SPEED;
-	}
-
-	sf::Vector2f steer = desiredVelocity - m_velocity;
-
-	return steer * m_separationWeight * m_maxSteer;
+	return separationVelocity * m_separationWeight;
 }
 
 sf::Vector2f Boid::m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids)
 {
-	sf::Vector2f desiredVelocity;
+	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
-	int count = 0;
+	sf::Vector2f cohesionVelocity;
+
 	for (auto boid : m_boidsInRange)
 	{
-		sf::Vector2f diff(m_position - boid->m_position);
-		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);// * (distance / m_detectionRadius);
-
-		if(diff.x > 0)
-			desiredVelocity.x += std::sqrt(diff.x);
-		else if(diff.x < 0)
-			desiredVelocity.x -= std::sqrt(-diff.x);
-
-		if (diff.y > 0)
-			desiredVelocity.y += std::sqrt(diff.y);
-		else if (diff.y < 0)
-			desiredVelocity.y -= std::sqrt(-diff.y);
-		count++;
+		cohesionVelocity += boid->getPoint();
 	}
+	cohesionVelocity /= float(m_boidsInRange.size());
+	cohesionVelocity -= m_position;
 
-	if (count)
-	{
-		desiredVelocity /= (float)count;
-		desiredVelocity = normalise(desiredVelocity) * MAX_SPEED * -1.f;
-	}
-
-	sf::Vector2f steer = desiredVelocity - m_velocity;
-
-	return steer * m_cohesionWeight * m_maxSteer;
+	return cohesionVelocity * m_cohesionWeight;
 }
 
 sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
 {
-	sf::Vector2f desiredVelocity;
-	sf::Vector2f averageVelocity;
+	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
-	int count = 0;
+	sf::Vector2f allignmentVelocity(m_detectionRadius / 2.f, 0.f);
+	sf::Angle averageAngle;
+
 	for (auto boid : m_boidsInRange)
 	{
-		if (boid->m_id != m_id)
-		{
-			sf::Vector2f diff(m_position - boid->m_position);
-			float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-
-			averageVelocity += boid->m_velocity * (m_detectionRadius / distance);
-			count++;
-		}
+		averageAngle += sf::Vector2f({ 1.f, 0.f }).angleTo(boid->m_velocity);
 	}
 
-	if (count)
-	{
-		averageVelocity /= (float)count;
-		desiredVelocity = normalise(m_velocity - averageVelocity) * MAX_SPEED * -1.f;
-	}
+	averageAngle /= float(m_boidsInRange.size());
 
-	sf::Vector2f steer = desiredVelocity - m_velocity;
+	sf::Angle currentAngle = sf::Vector2f({ 1.f, 0.f }).angleTo(m_velocity);
 
-	return steer * m_allignmentWeight * m_maxSteer;
+	allignmentVelocity = (allignmentVelocity.rotatedBy(averageAngle) - allignmentVelocity.rotatedBy(currentAngle)) * m_allignmentWeight;
+
+	return allignmentVelocity * m_allignmentWeight;
 }
 
 bool Boid::m_inCone(const std::shared_ptr<Boid> boid)
 {
-	sf::Angle rotation = m_boidSprite.getRotation();
-	sf::Angle angle1(sf::radians(m_detectionCone / 2 - M_PI_2));
-	sf::Angle angle2(sf::radians(-m_detectionCone / 2 - M_PI_2));
-
-	sf::Vector2f detectionPointOne(std::cos((angle1 + rotation).asRadians()),
-		std::sin((angle1 + rotation).asRadians()));
-
-	sf::Vector2f detectionPointTwo(std::cos((angle2 + rotation).asRadians()),
-		std::sin((angle2 + rotation).asRadians()));
-
-	sf::Vector2f detectionPointOneReciprocal(-reciprocal(-detectionPointOne).x, -reciprocal(detectionPointOne).y);
-	sf::Vector2f detectionPointTwoReciprocal(-reciprocal(detectionPointTwo).x, -reciprocal(-detectionPointTwo).y);
-
-	float x = boid->m_position.x - m_position.x;
-	float y = boid->m_position.y - m_position.y;
-
-	bool dotOne = detectionPointOneReciprocal.x * x + detectionPointOneReciprocal.y * y > 0;
-	bool dotTwo = detectionPointTwoReciprocal.x * x + detectionPointTwoReciprocal.y * y > 0;
-	bool inCone = m_detectionCone > M_PI ? dotOne || dotTwo : dotOne && dotTwo;
-
-	if (inCone)
-	{
-		return true;
-	}
-	return false;
+	if ((boid->getPoint() - m_position).length() > m_detectionRadius) return false;
+	return abs(m_velocity.angleTo(boid->getPoint() - m_position).asRadians()) <= m_detectionAngle.asRadians() / 2.0f;
 }
 
 void Boid::m_saveInCone(Quadtree& quadtree, const std::vector<std::shared_ptr<Boid>>& boids)
@@ -361,9 +305,8 @@ void Boid::m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<
 	for (auto boid : possibleInRange)
 	{
 		sf::Vector2f diff(m_position - boid->m_position);
-		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
-		if (boid->getPoint() != getPoint() && distance < m_detectionRadius && m_inCone(boid))
+		if (boid->getID() != m_id && diff.length() <= m_detectionRadius && m_inCone(boid))
 			m_boidsInRange.push_back(boid);
 	}
 }

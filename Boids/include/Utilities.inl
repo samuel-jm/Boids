@@ -1,4 +1,10 @@
+#pragma once
+
+#define _USE_MATH_DEFINES
+
 #include "SFML/System/Vector2.hpp"
+
+#include <math.h>
 
 template <class T> int sign(T val)
 {
@@ -12,16 +18,7 @@ template <class T> sf::Vector2<T> reciprocal(sf::Vector2<T> val)
 
 template <class T> sf::Vector2<T> limit(sf::Vector2<T> vec, T limit)
 {
-	T mag = std::sqrt(vec.x * vec.x + vec.y * vec.y);
-
-	T ratio = limit / mag;
-	if (ratio < 1)
-	{
-		vec.x *= ratio;
-		vec.y *= ratio;
-	}
-
-	return vec;
+	return vec.length() <= limit ? vec : vec.normalized() * limit;
 }
 
 template <class T> sf::Vector2<T> normalise(sf::Vector2<T> vec)
@@ -36,4 +33,17 @@ template <class T> sf::Vector2<T> normalise(sf::Vector2<T> vec)
 	vec.y *= ratio;
 
 	return vec;
+}
+
+/// <summary>
+/// Return an <c>Angle</c> representing the angle between <c>vec</c> and
+/// the positive X axis.
+/// </summary>
+/// <typeparam name="T">The type of the vector</typeparam>
+/// <param name="vec">The vector</param>
+/// <returns>the <c>Angle</c></returns>
+template<class T> sf::Angle angle(sf::Vector2<T> vec) {
+	float add = vec.y < 0 ? 2 * M_PI : 0;
+	float scale = vec.y < 0 ? -1 : 1;
+	return sf::Angle(sf::radians(scale * acos(vec.normalized().x) + add));
 }
