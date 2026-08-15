@@ -8,7 +8,7 @@
 #include <iostream>
 #include <random>
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 class Boids
 {
@@ -37,13 +37,15 @@ private:
 	Slider<float> m_cohesion;
 	Slider<float> m_allignment;
 
-	Quadtree m_quadtree;
+	Quadtree<sf::Vector2f> m_quadtree;
 	DiskGraph m_diskGraph;
 
 	float m_deltaTime;
 
 	void m_draw();
 	void m_drawText();
-	void m_updateVelocity(float deltaTime);
+	void m_updateBoids(float deltaTime);
+	void m_updateBoidsVelocities(float deltaTime);
+	void m_updateBoidsPositions(float deltaTime);
 	void m_updateTree();
 };

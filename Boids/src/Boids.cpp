@@ -8,7 +8,7 @@ Boids::Boids() :
 	m_dimension(new sf::Vector2f(1200, 1000)),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
 	m_clock(), m_deltaTime(0),
-	m_quadtree(15, 5, 0, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y} }, nullptr),
+	m_quadtree(15, 4, 0, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y} }),
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
@@ -66,6 +66,7 @@ void Boids::run()
 				m_dimension->y = resizedEvent->size.y;
 				
 				m_window.setView(sf::View(sf::FloatRect({ 0, 0 }, { m_dimension->x, m_dimension->y })));
+				m_quadtree.setBounds({ { 0, 0 }, sf::Vector2f(m_window.getSize()) });
 				m_diskGraph.setGridSize(m_window.getSize());
 			}
 			if (event->is<sf::Event::MouseButtonPressed>())
@@ -104,7 +105,7 @@ void Boids::run()
 		m_fpsText.setString(sf::String(std::to_string((int)std::round(1.0f / m_deltaTime))));
 
 		m_window.clear();
-		m_updateVelocity(m_deltaTime);
+		m_updateBoids(m_deltaTime);
 		m_draw();
 		m_window.display();
 	}
@@ -114,7 +115,7 @@ void Boids::m_draw()
 {
 	for (auto boid : m_boids)
 	{
-		boid->draw(DEBUG, m_deltaTime);
+		boid->draw(m_window, DEBUG);
 	}
 
 	m_separation.draw(m_window);
@@ -123,7 +124,7 @@ void Boids::m_draw()
 
 	if (DEBUG)
 	{
-		//m_quadtree.drawDebug(m_window);
+		m_quadtree.drawDebug(m_window);
 		//m_diskGraph.setBoids(m_boids, 30);
 		//m_diskGraph.drawDebug(m_window);
 	}
@@ -139,13 +140,26 @@ void Boids::m_drawText()
 	m_window.draw(m_fpsText);
 }
 
-void Boids::m_updateVelocity(float deltaTime)
+void Boids::m_updateBoids(float deltaTime)
+{
+	m_updateBoidsVelocities(deltaTime);
+	m_updateBoidsPositions(deltaTime);
+	m_updateTree();
+}
+
+void Boids::m_updateBoidsVelocities(float deltaTime)
 {
 	for (auto boid : m_boids)
-	{
-		boid->updateVelocity(m_diskGraph, m_boids, deltaTime);
+		boid->updateVelocity(m_quadtree, m_boids, deltaTime);
+}
+
+void Boids::m_updateBoidsPositions(float deltaTime)
+{
+	for (auto boid : m_boids) {
+		sf::Vector2f oldPosition = boid->getTranslation();
+		boid->updatePosition(deltaTime);
+		m_quadtree.updateItem(boid);
 	}
-	m_updateTree();
 }
 
 void Boids::m_updateTree()

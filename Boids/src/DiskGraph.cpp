@@ -76,10 +76,10 @@ void DiskGraph::drawDebug(sf::RenderWindow& window)
 	line[0].color = sf::Color::Green;
 	line[1].color = sf::Color::Green;
 	for (auto boid : m_boids) {
-		line[0].position = boid->getPoint();
-		auto neighbours = search(boid->getPoint());
+		line[0].position = boid->getTranslation();
+		auto neighbours = search(boid->getTranslation());
 		for (auto neighbour : neighbours) {
-			line[1].position = neighbour->getPoint();
+			line[1].position = neighbour->getTranslation();
 			window.draw(line.data(), line.size(), sf::PrimitiveType::Lines);
 		}
 		
@@ -89,7 +89,7 @@ void DiskGraph::drawDebug(sf::RenderWindow& window)
 void DiskGraph::m_populateGrid() {
 	m_integerGrid.clear();
 	for (auto boid : m_boids) {
-		sf::Vector2f position = boid->getPoint();
+		sf::Vector2f position = boid->getTranslation();
 		m_integerGrid[{int(position.x) / (2 * m_radius), int(position.y) / (2 * m_radius)}].insert(boid);
 	}
 }
