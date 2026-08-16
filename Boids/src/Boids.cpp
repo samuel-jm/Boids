@@ -8,7 +8,7 @@ Boids::Boids() :
 	m_dimension(new sf::Vector2f(1200, 1000)),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
 	m_clock(), m_deltaTime(0),
-	m_quadtree(15, 4, 0, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y} }),
+	m_quadtree(15, 4, { {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y} }),
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
@@ -22,6 +22,8 @@ Boids::Boids() :
 		sf::Vector2f velocity(std::rand() % 301 - 150, std::rand() % 301 - 150);
 		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, *m_dimension, 30));
 	}
+	m_resetTree();
+
 	Boid::setSeparationWeight(INITIAL_SEPARATION);
 	Boid::setCohesionWeight(INITIAL_COHESION);
 	Boid::setAllignmentWeight(INITIAL_ALLIGNMENT);
@@ -66,7 +68,7 @@ void Boids::run()
 				m_dimension->y = resizedEvent->size.y;
 				
 				m_window.setView(sf::View(sf::FloatRect({ 0, 0 }, { m_dimension->x, m_dimension->y })));
-				m_quadtree.setBounds({ { 0, 0 }, sf::Vector2f(m_window.getSize()) });
+				m_resetTree();
 				m_diskGraph.setGridSize(m_window.getSize());
 			}
 			if (event->is<sf::Event::MouseButtonPressed>())
@@ -144,7 +146,7 @@ void Boids::m_updateBoids(float deltaTime)
 {
 	m_updateBoidsVelocities(deltaTime);
 	m_updateBoidsPositions(deltaTime);
-	m_updateTree();
+	m_resetTree();
 }
 
 void Boids::m_updateBoidsVelocities(float deltaTime)
@@ -162,7 +164,7 @@ void Boids::m_updateBoidsPositions(float deltaTime)
 	}
 }
 
-void Boids::m_updateTree()
+void Boids::m_resetTree()
 {
 	m_quadtree.clear();
 	for (auto boid : m_boids)

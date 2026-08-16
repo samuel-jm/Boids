@@ -47,5 +47,5 @@ private:
 	void m_updateBoids(float deltaTime);
 	void m_updateBoidsVelocities(float deltaTime);
 	void m_updateBoidsPositions(float deltaTime);
-	void m_updateTree();
+	void m_resetTree();
 };
