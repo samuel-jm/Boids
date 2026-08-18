@@ -14,7 +14,6 @@ class Boids
 {
 public:
 	Boids();
-	~Boids();
 
 	void run();
 
@@ -25,7 +24,7 @@ private:
 
 	std::vector<std::shared_ptr<Boid>> m_boids;
 
-	sf::Vector2f* m_dimension;
+	sf::Vector2f m_dimension;
 
 	sf::Font m_font;
 	sf::Text m_separationText;

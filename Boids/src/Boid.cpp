@@ -8,7 +8,6 @@ float Boid::m_cohesionWeight;
 float Boid::m_allignmentWeight;
 
 Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocity, sf::Vector2f& dimension, int detectionRadius) :
-	m_dimension(dimension),
 	m_position(position), m_velocity(velocity),
 	m_detectionRadius(detectionRadius), m_detectionAngle(sf::degrees(270)),
 	m_boidsInRange(),
@@ -65,15 +64,27 @@ void Boid::draw(sf::RenderWindow& window, bool debug)
 
 void Boid::debugDraw(sf::RenderWindow& window)
 {
-	bool cone(false);
-	bool line(true);
-	bool dot(false);
-	bool velocity(false);
-	bool steer(false);
+	static bool text(false);
+	static bool cone(false);
+	static bool line(false);
+	static bool dot(false);
+	static bool velocity(false);
+	static bool steer(false);
 
-	sf::Vertex vertex;
+	if (text)
+	{
+		sf::Font f("fonts/arial.ttf");
+		sf::Text t(f);
+		t.setString(std::to_string(m_id));
+		t.setPosition(m_position);
+		t.setCharacterSize(18);
+
+		window.draw(t);
+	}
+
 	if (cone) //LoS cone
 	{
+		sf::Vertex vertex;
 		sf::VertexArray detectionCone(sf::PrimitiveType::LineStrip);
 		sf::Angle rotation(sf::radians(m_boidSprite.getRotation().asRadians()));
 
@@ -227,15 +238,15 @@ void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_pt
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
-void Boid::updatePosition(float deltaTime)
+void Boid::updatePosition(float deltaTime, const sf::Vector2f& windowSize)
 {
 	m_position += m_velocity * deltaTime;
 
-	if (m_position.x < 0) m_position.x += m_dimension.x;
-	else if (m_position.x > m_dimension.x) m_position.x -= m_dimension.x;
+	if (m_position.x < 0) m_position.x += windowSize.x;
+	else if (m_position.x > windowSize.x) m_position.x -= windowSize.x;
 
-	if (m_position.y < 0) m_position.y += m_dimension.y;
-	else if (m_position.y > m_dimension.y) m_position.y -= m_dimension.y;
+	if (m_position.y < 0) m_position.y += windowSize.y;
+	else if (m_position.y > windowSize.y) m_position.y -= windowSize.y;
 
 	m_boidSprite.setPosition(m_position);
 	m_boidSprite.setRotation(sf::Angle(sf::radians(std::atan2f(m_velocity.y, m_velocity.x) + M_PI_2)));
@@ -279,21 +290,30 @@ sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
 {
 	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
-	sf::Vector2f allignmentVelocity(m_detectionRadius / 2.f, 0.f);
+	sf::Vector2f velocity = m_velocity;
+	sf::Vector2f allignmentDirection;//(m_detectionRadius / 2.f, 0.f);
 	sf::Angle averageAngle;
 
 	for (auto boid : m_boidsInRange)
 	{
-		averageAngle += sf::Vector2f({ 1.f, 0.f }).angleTo(boid->m_velocity);
+		//averageAngle += sf::Vector2f({ 1.f, 0.f }).angleTo(boid->m_velocity);
+		allignmentDirection += boid->m_velocity;
 	}
+	allignmentDirection = allignmentDirection.normalized();
 
-	averageAngle /= float(m_boidsInRange.size());
+	sf::Angle rotation(sf::radians(velocity.angleTo(allignmentDirection).asRadians() * m_allignmentWeight));
 
-	sf::Angle currentAngle = sf::Vector2f({ 1.f, 0.f }).angleTo(m_velocity);
+	velocity = velocity.rotatedBy(rotation);
 
-	allignmentVelocity = (allignmentVelocity.rotatedBy(averageAngle) - allignmentVelocity.rotatedBy(currentAngle)) * m_allignmentWeight;
+	//averageAngle /= float(m_boidsInRange.size());
 
-	return allignmentVelocity * m_allignmentWeight;
+	//sf::Angle currentAngle = sf::Vector2f({ 1.f, 0.f }).angleTo(m_velocity);
+
+	//std::cout << currentAngle.asDegrees() << std::endl;
+
+	//allignmentVelocity = (allignmentVelocity.rotatedBy(averageAngle) - allignmentVelocity.rotatedBy(currentAngle)) * m_allignmentWeight;
+
+	return (velocity - m_velocity);
 }
 
 bool Boid::m_inCone(const std::shared_ptr<Boid> boid)

@@ -32,7 +32,7 @@ public:
 	int getID();
 	void updateVelocity(Quadtree<sf::Vector2f>& quadtree, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
 	void updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
-	void updatePosition(float deltaTime);
+	void updatePosition(float deltaTime, const sf::Vector2f& windowSize);
 	void draw(sf::RenderWindow& window, bool debug);
 	void debugDraw(sf::RenderWindow& window);
 
@@ -47,7 +47,6 @@ private:
 	sf::Vector2f m_position;
 	sf::Vector2f m_velocity;
 	sf::Vector2f m_steer;
-	sf::Vector2f& m_dimension;
 	std::vector<std::shared_ptr<Boid>> m_boidsInRange;
 	sf::Angle m_detectionAngle; // The angle within which the boid can detect other boids, with the potential blind-spot being behind the boid
 
