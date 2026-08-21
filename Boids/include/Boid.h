@@ -3,19 +3,18 @@
 #define _USE_MATH_DEFINES
 
 #include "SFML/Graphics.hpp"
-#include "Utilities.inl"
+#include "Utilities.h"
 #include "ITranslatable.h"
+#include "IPartitioner.h"
 
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 const float MAX_SPEED = 150.f;
 const float STEER_MULTIPLIER = 30.f;
 const float ACCELERATION = 50.f;
 
-template<typename T>
-class Quadtree;
-class DiskGraph;
 class Boid : public ITranslatable<sf::Vector2f>, public std::enable_shared_from_this<Boid>
 {
 public:
@@ -30,8 +29,7 @@ public:
 
 	float getRadius() const;
 	int getID();
-	void updateVelocity(Quadtree<sf::Vector2f>& quadtree, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
-	void updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>&, float deltaTime);
+	void updateVelocity(std::unique_ptr<IPartitioner<sf::Vector2f>>& quadtree, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime);
 	void updatePosition(float deltaTime, const sf::Vector2f& windowSize);
 	void draw(sf::RenderWindow& window, bool debug);
 	void debugDraw(sf::RenderWindow& window);
@@ -59,7 +57,6 @@ private:
 	sf::Vector2f m_allignment(const std::vector<std::shared_ptr<Boid>>& boids);
 	sf::Vector2f m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids);
 	bool m_inCone(const std::shared_ptr<Boid> boid);
-	void m_saveInCone(Quadtree<sf::Vector2f>& quadtree, const std::vector<std::shared_ptr<Boid>>& boids);
-	void m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids);
+	void m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner, const std::vector<std::shared_ptr<Boid>>& boids);
 	inline void m_clamp(float& pos, int min, int max);
 };

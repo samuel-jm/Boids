@@ -5,6 +5,7 @@
 #include "SFML/System/Vector2.hpp"
 
 #include <math.h>
+#include <string>
 
 template <class T> int sign(T val)
 {
@@ -42,8 +43,20 @@ template <class T> sf::Vector2<T> normalise(sf::Vector2<T> vec)
 /// <typeparam name="T">The type of the vector</typeparam>
 /// <param name="vec">The vector</param>
 /// <returns>the <c>Angle</c></returns>
-template<class T> sf::Angle angle(sf::Vector2<T> vec) {
+template<class T> sf::Angle angle(sf::Vector2<T> vec)
+{
 	float add = vec.y < 0 ? 2 * M_PI : 0;
 	float scale = vec.y < 0 ? -1 : 1;
 	return sf::Angle(sf::radians(scale * acos(vec.normalized().x) + add));
 }
+
+template<class T, class U>
+struct PairHash
+{
+	std::size_t operator()(const std::pair<T, U>& pair) const
+	{
+		return std::hash<T>()(pair.first) ^ std::hash<U>()(pair.second);
+	}
+};
+
+void makeLowerCase(std::string* string);

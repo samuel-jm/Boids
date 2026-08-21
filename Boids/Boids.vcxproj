@@ -154,6 +154,7 @@
     <ClCompile Include="src\Boid.cpp" />
     <ClCompile Include="src\Boids.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\DiskGraph.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="include\Quadtree.h" />
     <ClInclude Include="include\Slider.inl" />
     <ClInclude Include="include\ITranslatable.h" />
+    <ClInclude Include="include\PartitionerFactory.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\bar.png" />
@@ -172,7 +174,7 @@
     <Font Include="fonts\arial.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\Utilities.inl" />
+    <None Include="include\Utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

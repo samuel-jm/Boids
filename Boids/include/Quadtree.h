@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Boid.h"
 #include "IPartitioner.h"
 
 #include <iostream>
@@ -13,7 +12,7 @@ template<typename T>
 class Quadtree : public IPartitioner<T>
 {
 public:
-	Quadtree(int maxItems, int maxLevels, T position, T size) :
+	Quadtree(int maxItems, int maxLevels, const T& position, const T& size) :
 		m_root(new Node(0, position, size, *this, nullptr)),
 		m_cache(std::unordered_map<std::shared_ptr<ITranslatable<T>>, Node*>()),
 		m_maxItems(maxItems),
@@ -36,7 +35,7 @@ public:
 	}
 
 	void clear() override { m_root->clear(); }
-	void resize(const T& position, const T& size)
+	void resize(const T& position, const T& size) override
 	{
 		clear();
 		m_root->position = position;
@@ -49,7 +48,7 @@ public:
 	std::vector<std::shared_ptr<ITranslatable<T>>> search(std::shared_ptr<ITranslatable<T>> item) override { return m_root->getNodeContainingItem(item)->items; }
 	void drawDebug(sf::RenderWindow& window) override { m_root->drawDebug(window); }
 
-	void pack()
+	void pack() override
 	{
 		m_root->merge();
 	}

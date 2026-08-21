@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Boid.h"
-#include "Quadtree.h"
 #include "Slider.inl"
-#include "DiskGraph.h"
+#include "PartitionerFactory.inl"
 
 #include <iostream>
 #include <random>
+#include <memory>
 
 const bool DEBUG = true;
 
@@ -36,8 +36,7 @@ private:
 	Slider<float> m_cohesion;
 	Slider<float> m_allignment;
 
-	Quadtree<sf::Vector2f> m_quadtree;
-	DiskGraph m_diskGraph;
+	std::unique_ptr<IPartitioner<sf::Vector2f>> m_partitioner;
 
 	float m_deltaTime;
 

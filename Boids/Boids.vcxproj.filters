@@ -23,6 +23,9 @@
     <ClCompile Include="src\DiskGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Boids.h">
@@ -46,6 +49,9 @@
     <ClInclude Include="include\ITranslatable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\PartitionerFactory.inl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\boid.png" />
@@ -55,7 +61,7 @@
     <Font Include="fonts\arial.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\Utilities.inl">
+    <None Include="include\Utilities.h">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

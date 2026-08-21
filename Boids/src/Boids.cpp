@@ -8,7 +8,7 @@ Boids::Boids() :
 	m_dimension(1200, 1000),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
 	m_clock(), m_deltaTime(0),
-	m_quadtree(30, 3, {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y}),
+	//m_quadtree(30, 3, {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y}),
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
@@ -16,6 +16,13 @@ Boids::Boids() :
 	m_cohesion({ 240, 20 }, { 200, 10 }, 0.f, 0.5f, INITIAL_COHESION),
 	m_allignment({ 460, 20 }, { 200, 10 }, 0.f, 1.f, INITIAL_ALLIGNMENT)
 {
+	const int maxItems(30);
+	const int maxLevels(3);
+	sf::Vector2f position({ 0, 0 });
+	sf::Vector2f size({ (float)m_window.getSize().x, (float)m_window.getSize().y });
+
+	m_partitioner = std::move(PartitionerFactory<sf::Vector2f, int, sf::Vector2f, sf::Vector2f>::createPartitioner(std::string("diskgraph"), 30, position, size));
+
 	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
@@ -28,7 +35,7 @@ Boids::Boids() :
 	Boid::setCohesionWeight(INITIAL_COHESION);
 	Boid::setAllignmentWeight(INITIAL_ALLIGNMENT);
 
-	m_diskGraph.init(m_boids, 30, m_window.getSize());
+	//m_diskGraph.init(m_boids, 30, m_window.getSize());
 
 	m_separationText.setString("Separation");
 	m_cohesionText.setString("Cohesion");
@@ -63,8 +70,8 @@ void Boids::run()
 				m_dimension.y = resizedEvent->size.y;
 				
 				m_window.setView(sf::View(sf::FloatRect({ 0, 0 }, { m_dimension.x, m_dimension.y })));
-				m_quadtree.resize({ 0, 0 }, m_dimension);
-				m_diskGraph.setGridSize(m_window.getSize());
+				m_partitioner->resize({ 0, 0 }, m_dimension);
+				//m_diskGraph.setGridSize(m_window.getSize());
 			}
 			if (event->is<sf::Event::MouseButtonPressed>())
 			{
@@ -119,7 +126,7 @@ void Boids::m_draw()
 
 	if (DEBUG)
 	{
-		m_quadtree.drawDebug(m_window);
+		m_partitioner->drawDebug(m_window);
 		//m_diskGraph.setBoids(m_boids, 30);
 		//m_diskGraph.drawDebug(m_window);
 	}
@@ -139,14 +146,14 @@ void Boids::m_updateBoids(float deltaTime)
 {
 	m_updateBoidsVelocities(deltaTime);
 	m_updateBoidsPositions(deltaTime);
-	m_quadtree.pack();
+	m_partitioner->pack();
 	//m_resetTree();
 }
 
 void Boids::m_updateBoidsVelocities(float deltaTime)
 {
 	for (auto boid : m_boids)
-		boid->updateVelocity(m_quadtree, m_boids, deltaTime);
+		boid->updateVelocity(m_partitioner, m_boids, deltaTime);
 }
 
 void Boids::m_updateBoidsPositions(float deltaTime)
@@ -154,16 +161,16 @@ void Boids::m_updateBoidsPositions(float deltaTime)
 	for (auto boid : m_boids) {
 		sf::Vector2f oldPosition = boid->getTranslation();
 		boid->updatePosition(deltaTime, m_dimension);
-		m_quadtree.updateItem(boid);
+		m_partitioner->updateItem(boid);
 	}
 }
 
 void Boids::m_resetTree()
 {
-	m_quadtree.clear();
+	m_partitioner->clear();
 	for (auto boid : m_boids)
 	{
-		m_quadtree.insert(boid);
+		m_partitioner->insert(boid);
 	}
-	m_diskGraph.setBoids(m_boids, 30);
+	//m_diskGraph.setBoids(m_boids, 30);
 }

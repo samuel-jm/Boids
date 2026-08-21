@@ -1,6 +1,4 @@
 #include "Boid.h"
-#include "Quadtree.h"
-#include "DiskGraph.h"
 
 int   Boid::m_boidCount = 0;
 float Boid::m_separationWeight;
@@ -202,9 +200,9 @@ void Boid::debugDraw(sf::RenderWindow& window)
 	}
 }
 
-void Boid::updateVelocity(Quadtree<sf::Vector2f>& quadtree, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
+void Boid::updateVelocity(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
 {
-	m_saveInCone(quadtree, boids);
+	m_saveInCone(partitioner, boids);
 
 	sf::Vector2f separation(m_separation(boids));
 	sf::Vector2f cohesion(m_cohesion(boids));
@@ -212,31 +210,29 @@ void Boid::updateVelocity(Quadtree<sf::Vector2f>& quadtree, const std::vector<st
 	sf::Vector2f steer = separation + cohesion + allignment;
 	m_steer = steer;
 
-	//m_velocity = m_velocity.rotatedBy(m_velocity.angleTo(steer) / 30.f);
-
 	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
 	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
 
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
 
-void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
-{
-	m_saveInCone(diskGraph, boids);
-
-	sf::Vector2f separation(m_separation(boids));
-	sf::Vector2f cohesion(m_cohesion(boids));
-	sf::Vector2f allignment(m_allignment(boids));
-	sf::Vector2f steer = separation + cohesion + allignment;
-	m_steer = steer;
-
-	//m_velocity = m_velocity.rotatedBy(m_velocity.angleTo(steer) / 30.f);
-
-	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
-	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
-
-	m_velocity = limit(m_velocity, MAX_SPEED);
-}
+//void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
+//{
+//	m_saveInCone(diskGraph, boids);
+//
+//	sf::Vector2f separation(m_separation(boids));
+//	sf::Vector2f cohesion(m_cohesion(boids));
+//	sf::Vector2f allignment(m_allignment(boids));
+//	sf::Vector2f steer = separation + cohesion + allignment;
+//	m_steer = steer;
+//
+//	//m_velocity = m_velocity.rotatedBy(m_velocity.angleTo(steer) / 30.f);
+//
+//	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
+//	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
+//
+//	m_velocity = limit(m_velocity, MAX_SPEED);
+//}
 
 void Boid::updatePosition(float deltaTime, const sf::Vector2f& windowSize)
 {
@@ -322,13 +318,13 @@ bool Boid::m_inCone(const std::shared_ptr<Boid> boid)
 	return abs(m_velocity.angleTo(boid->getTranslation() - m_position).asRadians()) <= m_detectionAngle.asRadians() / 2.0f;
 }
 
-void Boid::m_saveInCone(Quadtree<sf::Vector2f>& quadtree, const std::vector<std::shared_ptr<Boid>>& boids)
+void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner, const std::vector<std::shared_ptr<Boid>>& boids)
 {
 	m_boidsInRange.clear();
 	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
 	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
 
-	auto possibleInRange = quadtree.search(shared_from_this());
+	auto possibleInRange = partitioner->search(shared_from_this());
 
 	for (auto boid1 : possibleInRange)
 	{
@@ -341,22 +337,22 @@ void Boid::m_saveInCone(Quadtree<sf::Vector2f>& quadtree, const std::vector<std:
 	}
 }
 
-void Boid::m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids)
-{
-	m_boidsInRange.clear();
-	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
-	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
-
-	std::vector<std::shared_ptr<Boid>> possibleInRange = diskGraph.search(m_position);
-
-	for (auto boid : possibleInRange)
-	{
-		sf::Vector2f diff(m_position - boid->m_position);
-
-		if (boid->getID() != m_id && diff.length() <= m_detectionRadius && m_inCone(boid))
-			m_boidsInRange.push_back(boid);
-	}
-}
+//void Boid::m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids)
+//{
+//	m_boidsInRange.clear();
+//	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
+//	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
+//
+//	std::vector<std::shared_ptr<Boid>> possibleInRange = diskGraph.search(m_position);
+//
+//	for (auto boid : possibleInRange)
+//	{
+//		sf::Vector2f diff(m_position - boid->m_position);
+//
+//		if (boid->getID() != m_id && diff.length() <= m_detectionRadius && m_inCone(boid))
+//			m_boidsInRange.push_back(boid);
+//	}
+//}
 
 int Boid::getID()
 {
