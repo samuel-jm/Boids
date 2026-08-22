@@ -23,9 +23,17 @@ public:
 		m_position(position),
 		m_windowSize(size),
 		m_gridSize(int(size.x) / (2 * radius), int(size.y) / (2 * radius))
-	{}
+	{
+		for (int y = 0; y < m_gridSize.y; y++)
+		{
+			for (int x = 0; x < m_gridSize.x; x++)
+			{
+				m_shouldRecalculateitemNeighboursCache[{x, y}] = true;
+			}
+		}
+	}
 
-	void insert(std::shared_ptr<ITranslatable<T>> item) override 
+	void insert(std::shared_ptr<ITranslatable<T>> item) override
 	{
 		m_items.push_back(item);
 
@@ -33,9 +41,11 @@ public:
 		std::pair<int, int> itemGridCell = m_getItemGridCell(item);
 		m_integerGrid[itemGridCell].insert(item);
 		m_itemCellCache[item] = itemGridCell;
+
+		m_setUpdateCellAndNeighbours(itemGridCell);
 	}
 
-	void remove(std::shared_ptr<ITranslatable<T>> item) override 
+	void remove(std::shared_ptr<ITranslatable<T>> item) override
 	{
 		auto it = std::find(m_items.begin(), m_items.end(), item);
 		if (it == m_items.end()) return;
@@ -50,9 +60,11 @@ public:
 
 		itemsRemoved = m_itemCellCache.erase(item);
 		assert(itemsRemoved == 1);
+
+		m_setUpdateCellAndNeighbours(itemGridCell);
 	}
 
-	void updateItem(std::shared_ptr<ITranslatable<T>> item) override 
+	void updateItem(std::shared_ptr<ITranslatable<T>> item) override
 	{
 		std::pair<int, int> newGridCell = m_getItemGridCell(item);
 		std::pair<int, int> oldGridCell;
@@ -65,40 +77,49 @@ public:
 
 			m_integerGrid[newGridCell].insert(item);
 			m_itemCellCache[item] = newGridCell;
+
+			m_setUpdateCellAndNeighbours(oldGridCell);
+			m_setUpdateCellAndNeighbours(newGridCell);
 		}
 	}
 
-	void clear() override 
+	void clear() override
 	{
 		m_items.clear();
 	}
 
-	void resize(const T& position, const T& size) override 
+	void resize(const T& position, const T& size) override
 	{
 		m_position = position;
 		m_windowSize = size;
 	}
 
-	std::vector<std::shared_ptr<ITranslatable<T>>> search(std::shared_ptr<ITranslatable<T>> item) override 
+	std::vector<std::shared_ptr<ITranslatable<T>>> search(std::shared_ptr<ITranslatable<T>> item) override
 	{
 		std::pair<int, int> itemGridCell = m_getItemGridCell(item);
 
-		std::vector<std::shared_ptr<ITranslatable<T>>> output;
-		for (int y = itemGridCell.second - 1; y <= itemGridCell.second + 1; y++) {
-			if (y < 0 || y >= m_gridSize.y) continue;
-			for (int x = itemGridCell.first - 1; x <= itemGridCell.first + 1; x++) {
-				if (x < 0 || x >= m_gridSize.x || m_integerGrid[{x, y}].size() == 0) continue;
-				std::vector<std::shared_ptr<ITranslatable<T>>> nearbyItems;
-				for (auto it = m_integerGrid[{x, y}].begin(); it != m_integerGrid[{x, y}].end(); it++) {
-					nearbyItems.push_back(*it);
+		if (m_shouldRecalculateitemNeighboursCache[itemGridCell])
+		{
+			m_itemNeighboursCache[itemGridCell].clear();
+			for (int y = itemGridCell.second - 1; y <= itemGridCell.second + 1; y++)
+			{
+				if (y < 0 || y >= m_gridSize.y) continue;
+				for (int x = itemGridCell.first - 1; x <= itemGridCell.first + 1; x++)
+				{
+					if (x < 0 || x >= m_gridSize.x || m_integerGrid[{x, y}].size() == 0) continue;
+					std::set<std::shared_ptr<ITranslatable<T>>> itemSetInCell = m_integerGrid[{x, y}];
+					for (auto it = itemSetInCell.begin(); it != itemSetInCell.end(); it++)
+					{
+						m_itemNeighboursCache[itemGridCell].push_back(*it);
+					}
 				}
-				output.insert(output.end(), nearbyItems.begin(), nearbyItems.end());
 			}
+			m_shouldRecalculateitemNeighboursCache[itemGridCell] = false;
 		}
-		return output;
+		return m_itemNeighboursCache[itemGridCell];
 	}
 
-	void drawDebug(sf::RenderWindow& window) override 
+	void drawDebug(sf::RenderWindow& window) override
 	{
 		sf::Vector2u windowSize = window.getSize();
 		sf::RectangleShape horizontalLine({ (float)windowSize.x, 1.0f });
@@ -150,7 +171,8 @@ public:
 private:
 	std::vector<std::shared_ptr<ITranslatable<T>>> m_items;
 	std::unordered_map<std::pair<int, int>, std::set<std::shared_ptr<ITranslatable<T>>>, PairHash<int, int>> m_integerGrid;
-	//std::unordered_map<std::pair<int, int>, std::vector<std::shared_ptr<ITranslatable<T>>>> m_itemNeighboursCache;
+	std::unordered_map<std::pair<int, int>, std::vector<std::shared_ptr<ITranslatable<T>>>, PairHash<int, int>> m_itemNeighboursCache;
+	std::unordered_map<std::pair<int, int>, bool, PairHash<int, int>> m_shouldRecalculateitemNeighboursCache;
 	std::unordered_map<std::shared_ptr<ITranslatable<T>>, std::pair<int, int>> m_itemCellCache;
 	T m_position;
 	T m_windowSize;
@@ -162,6 +184,19 @@ private:
 	{
 		T position = item->getTranslation();
 		return { int(position.x) / (2 * m_radius), int(position.y) / (2 * m_radius) };
+	}
+
+	void m_setUpdateCellAndNeighbours(const std::pair<int, int>& itemGridCell)
+	{
+		for (int y = itemGridCell.second - 1; y <= itemGridCell.second + 1; y++)
+		{
+			if (y < 0 || y >= m_gridSize.y) continue;
+			for (int x = itemGridCell.first - 1; x <= itemGridCell.first + 1; x++)
+			{
+				if (x < 0 || x >= m_gridSize.x) continue;
+				m_shouldRecalculateitemNeighboursCache[{x, y}] = true;
+			}
+		}
 	}
 };
 
