@@ -4,6 +4,11 @@ const float INITIAL_SEPARATION = 1.f;
 const float INITIAL_COHESION = 0.3f;
 const float INITIAL_ALLIGNMENT = 0.2f;
 
+const int QUADTREE_MAX_ITEMS = 30;
+const int QUADTREE_MAX_LEVELS = 3;
+
+const int BOID_DETECTION_RADIUS = 30;
+
 Boids::Boids() :
 	m_dimension(1200, 1000),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
@@ -16,18 +21,23 @@ Boids::Boids() :
 	m_cohesion({ 240, 20 }, { 200, 10 }, 0.f, 0.5f, INITIAL_COHESION),
 	m_allignment({ 460, 20 }, { 200, 10 }, 0.f, 1.f, INITIAL_ALLIGNMENT)
 {
-	const int maxItems(30);
-	const int maxLevels(3);
 	sf::Vector2f position({ 0, 0 });
 	sf::Vector2f size({ (float)m_window.getSize().x, (float)m_window.getSize().y });
 
-	m_partitioner = std::move(PartitionerFactory<sf::Vector2f, int, sf::Vector2f, sf::Vector2f>::createPartitioner(std::string("diskgraph"), 30, position, size));
+	m_partitioner = std::move(PartitionerFactory::createPartitioner<sf::Vector2f>("quadtree", QUADTREE_MAX_ITEMS, QUADTREE_MAX_LEVELS, position, size));
+	m_partitioner = std::move(PartitionerFactory::createPartitioner<sf::Vector2f>("diskgraph", BOID_DETECTION_RADIUS, position, size));
+
+	if (m_partitioner == nullptr)
+	{
+		std::cerr << "Please ensure the arguments for the given IPartitioner string match its constructor" << std::endl;
+		exit(-1);
+	}
 
 	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
 		sf::Vector2f velocity(std::rand() % 301 - 150, std::rand() % 301 - 150);
-		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, m_dimension, 30));
+		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, m_dimension, BOID_DETECTION_RADIUS));
 	}
 	m_resetTree();
 
