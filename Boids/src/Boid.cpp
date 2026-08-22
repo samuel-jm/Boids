@@ -5,6 +5,8 @@ float Boid::m_separationWeight;
 float Boid::m_cohesionWeight;
 float Boid::m_allignmentWeight;
 
+const int MAX_NEIGHBOURS_TO_CONSIDER = 50;
+
 Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocity, sf::Vector2f& dimension, int detectionRadius) :
 	m_position(position), m_velocity(velocity),
 	m_detectionRadius(detectionRadius), m_detectionAngle(sf::degrees(270)),
@@ -326,14 +328,16 @@ void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner
 
 	auto possibleInRange = partitioner->search(shared_from_this());
 
-	for (auto boid1 : possibleInRange)
+	for (int i = 0; i < std::min(MAX_NEIGHBOURS_TO_CONSIDER, int(possibleInRange.size())); i++)
 	{
-		std::shared_ptr<Boid> boid = std::static_pointer_cast<Boid>(boid1);
+		std::shared_ptr<Boid> boid = std::dynamic_pointer_cast<Boid>(possibleInRange[i]);
+
 		sf::Vector2f diff(m_position - boid->m_position);
 		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
 		if (boid->getTranslation() != getTranslation() && distance < m_detectionRadius && m_inCone(boid))
 			m_boidsInRange.push_back(boid);
+
 	}
 }
 
