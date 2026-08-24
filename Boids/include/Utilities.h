@@ -4,52 +4,27 @@
 
 #include "SFML/System/Vector2.hpp"
 
-#include <math.h>
 #include <string>
 
-template <class T> int sign(T val)
-{
-	return val < 0 ? -1 : 1;
-}
-
-template <class T> sf::Vector2<T> reciprocal(sf::Vector2<T> val)
-{
-	return sf::Vector2<T>(val.y, val.x);
-}
-
+/// <summary>
+/// This function returns the given Vector2 with its length
+/// clamped to the given limit
+/// </summary>
+/// <typeparam name="T">The type of vector; float, int, or unsigned</typeparam>
+/// <param name="vec">The vector to clamp</param>
+/// <param name="limit">The value to clamp the vector to</param>
+/// <returns>the clamped vector</returns>
 template <class T> sf::Vector2<T> limit(sf::Vector2<T> vec, T limit)
 {
 	return vec.length() <= limit ? vec : vec.normalized() * limit;
 }
 
-template <class T> sf::Vector2<T> normalise(sf::Vector2<T> vec)
-{
-	T mag = std::sqrt(vec.x * vec.x + vec.y * vec.y);
-
-	if (mag == 0) return vec;
-
-	T ratio = (T)1 / mag;
-
-	vec.x *= ratio;
-	vec.y *= ratio;
-
-	return vec;
-}
-
 /// <summary>
-/// Return an <c>Angle</c> representing the angle between <c>vec</c> and
-/// the positive X axis.
+/// This struct defines a function call operator and is used
+/// as a hash function for whatever maps use a pair as its key
 /// </summary>
-/// <typeparam name="T">The type of the vector</typeparam>
-/// <param name="vec">The vector</param>
-/// <returns>the <c>Angle</c></returns>
-template<class T> sf::Angle angle(sf::Vector2<T> vec)
-{
-	float add = vec.y < 0 ? 2 * M_PI : 0;
-	float scale = vec.y < 0 ? -1 : 1;
-	return sf::Angle(sf::radians(scale * acos(vec.normalized().x) + add));
-}
-
+/// <typeparam name="T">The type of the first pair value</typeparam>
+/// <typeparam name="U">The type of the second pair value</typeparam>
 template<class T, class U>
 struct PairHash
 {
@@ -59,4 +34,8 @@ struct PairHash
 	}
 };
 
+/// <summary>
+/// Takes a pointer to a string and makes it lowercase
+/// </summary>
+/// <param name="string">The string to modify</param>
 void makeLowerCase(std::string* string);

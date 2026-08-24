@@ -25,36 +25,6 @@ Boid::Boid(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f velocit
 	m_boidSprite.setOrigin(sf::Vector2f(bounds.size.x / 2, bounds.size.y / 2));
 }
 
-void Boid::setSeparationWeight(float weight)
-{
-	m_separationWeight = weight;
-}
-
-void Boid::setCohesionWeight(float weight)
-{
-	m_cohesionWeight = weight;
-}
-
-void Boid::setAllignmentWeight(float weight)
-{
-	m_allignmentWeight = weight;
-}
-
-const sf::Vector2f& Boid::getTranslation()
-{
-	return m_position;
-}
-
-void Boid::setTranslation(const sf::Vector2f& translation)
-{
-	m_position = translation;
-}
-
-float Boid::getRadius() const
-{
-	return m_detectionRadius;
-}
-
 void Boid::draw(sf::RenderWindow& window, bool debug)
 {
 	window.draw(m_boidSprite);
@@ -204,11 +174,11 @@ void Boid::debugDraw(sf::RenderWindow& window)
 
 void Boid::updateVelocity(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
 {
-	m_saveInCone(partitioner, boids);
+	m_saveInCone(partitioner);
 
-	sf::Vector2f separation(m_separation(boids));
-	sf::Vector2f cohesion(m_cohesion(boids));
-	sf::Vector2f allignment(m_allignment(boids));
+	sf::Vector2f separation(m_separation());
+	sf::Vector2f cohesion(m_cohesion());
+	sf::Vector2f allignment(m_allignment());
 	sf::Vector2f steer = separation + cohesion + allignment;
 	m_steer = steer;
 
@@ -217,24 +187,6 @@ void Boid::updateVelocity(std::unique_ptr<IPartitioner<sf::Vector2f>>& partition
 
 	m_velocity = limit(m_velocity, MAX_SPEED);
 }
-
-//void Boid::updateVelocity(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids, float deltaTime)
-//{
-//	m_saveInCone(diskGraph, boids);
-//
-//	sf::Vector2f separation(m_separation(boids));
-//	sf::Vector2f cohesion(m_cohesion(boids));
-//	sf::Vector2f allignment(m_allignment(boids));
-//	sf::Vector2f steer = separation + cohesion + allignment;
-//	m_steer = steer;
-//
-//	//m_velocity = m_velocity.rotatedBy(m_velocity.angleTo(steer) / 30.f);
-//
-//	m_velocity += steer * STEER_MULTIPLIER * deltaTime;
-//	m_velocity += m_velocity.normalized() * ACCELERATION * deltaTime;
-//
-//	m_velocity = limit(m_velocity, MAX_SPEED);
-//}
 
 void Boid::updatePosition(float deltaTime, const sf::Vector2f& windowSize)
 {
@@ -250,7 +202,7 @@ void Boid::updatePosition(float deltaTime, const sf::Vector2f& windowSize)
 	m_boidSprite.setRotation(sf::Angle(sf::radians(std::atan2f(m_velocity.y, m_velocity.x) + M_PI_2)));
 }
 
-sf::Vector2f Boid::m_separation(const std::vector<std::shared_ptr<Boid>>& boids)
+sf::Vector2f Boid::m_separation()
 {
 	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
@@ -268,7 +220,7 @@ sf::Vector2f Boid::m_separation(const std::vector<std::shared_ptr<Boid>>& boids)
 	return separationVelocity * m_separationWeight;
 }
 
-sf::Vector2f Boid::m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids)
+sf::Vector2f Boid::m_cohesion()
 {
 	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
@@ -284,7 +236,7 @@ sf::Vector2f Boid::m_cohesion(const std::vector<std::shared_ptr<Boid>>& boids)
 	return cohesionVelocity * m_cohesionWeight;
 }
 
-sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
+sf::Vector2f Boid::m_allignment()
 {
 	if (m_boidsInRange.size() == 0) return { 0, 0 };
 
@@ -314,13 +266,7 @@ sf::Vector2f Boid::m_allignment(const std::vector<std::shared_ptr<Boid>>& boids)
 	return (velocity - m_velocity);
 }
 
-bool Boid::m_inCone(const std::shared_ptr<Boid> boid)
-{
-	if ((boid->getTranslation() - m_position).length() > m_detectionRadius) return false;
-	return abs(m_velocity.angleTo(boid->getTranslation() - m_position).asRadians()) <= m_detectionAngle.asRadians() / 2.0f;
-}
-
-void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner, const std::vector<std::shared_ptr<Boid>>& boids)
+void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner)
 {
 	m_boidsInRange.clear();
 	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
@@ -328,6 +274,7 @@ void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner
 
 	auto possibleInRange = partitioner->search(shared_from_this());
 
+	auto boidInSight = [&](const std::shared_ptr<Boid>& boid) { return abs(m_velocity.angleTo(boid->getTranslation() - m_position).asRadians()) <= m_detectionAngle.asRadians() / 2.0f; };
 	for (int i = 0; i < std::min(MAX_NEIGHBOURS_TO_CONSIDER, int(possibleInRange.size())); i++)
 	{
 		std::shared_ptr<Boid> boid = std::dynamic_pointer_cast<Boid>(possibleInRange[i]);
@@ -335,38 +282,8 @@ void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner
 		sf::Vector2f diff(m_position - boid->m_position);
 		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
-		if (boid->getTranslation() != getTranslation() && distance < m_detectionRadius && m_inCone(boid))
+		if (boid->m_id != m_id && distance <= m_detectionRadius && boidInSight(boid))
 			m_boidsInRange.push_back(boid);
 
 	}
-}
-
-//void Boid::m_saveInCone(DiskGraph& diskGraph, const std::vector<std::shared_ptr<Boid>>& boids)
-//{
-//	m_boidsInRange.clear();
-//	//sf::FloatRect area({ m_position.x - m_detectionRadius, m_position.y - m_detectionRadius },
-//	//	{ m_detectionRadius * 2.f, m_detectionRadius * 2.f });
-//
-//	std::vector<std::shared_ptr<Boid>> possibleInRange = diskGraph.search(m_position);
-//
-//	for (auto boid : possibleInRange)
-//	{
-//		sf::Vector2f diff(m_position - boid->m_position);
-//
-//		if (boid->getID() != m_id && diff.length() <= m_detectionRadius && m_inCone(boid))
-//			m_boidsInRange.push_back(boid);
-//	}
-//}
-
-int Boid::getID()
-{
-	return m_id;
-}
-
-void Boid::m_clamp(float& val, int min, int max)
-{
-	if (val >= max)
-		val = (float)max;
-	else if (val <= min)
-		val = (float)min;
 }

@@ -12,7 +12,7 @@ const int BOID_DETECTION_RADIUS = 30;
 Boids::Boids() :
 	m_dimension(1200, 1000),
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
-	m_clock(), m_deltaTime(0),
+	m_clock(),
 	//m_quadtree(30, 3, {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y}),
 	m_font("fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
@@ -24,7 +24,8 @@ Boids::Boids() :
 	sf::Vector2f position({ 0, 0 });
 	sf::Vector2f size({ (float)m_window.getSize().x, (float)m_window.getSize().y });
 
-	m_partitioner = std::move(PartitionerFactory::createPartitioner<sf::Vector2f>("quadtree", QUADTREE_MAX_ITEMS, QUADTREE_MAX_LEVELS, position, size));
+	// Comment one and uncomment the other to try a different partitioner
+	//m_partitioner = std::move(PartitionerFactory::createPartitioner<sf::Vector2f>("quadtree", QUADTREE_MAX_ITEMS, QUADTREE_MAX_LEVELS, position, size));
 	m_partitioner = std::move(PartitionerFactory::createPartitioner<sf::Vector2f>("diskgraph", BOID_DETECTION_RADIUS, position, size));
 
 	if (m_partitioner == nullptr)
@@ -37,9 +38,10 @@ Boids::Boids() :
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
 		sf::Vector2f velocity(std::rand() % 301 - 150, std::rand() % 301 - 150);
-		m_boids.push_back(std::make_shared<Boid>(m_window, position, velocity, m_dimension, BOID_DETECTION_RADIUS));
+		std::shared_ptr<Boid> boid(std::make_shared<Boid>(m_window, position, velocity, m_dimension, BOID_DETECTION_RADIUS));
+		m_boids.push_back(boid);
+		m_partitioner->insert(boid);
 	}
-	m_resetTree();
 
 	Boid::setSeparationWeight(INITIAL_SEPARATION);
 	Boid::setCohesionWeight(INITIAL_COHESION);
@@ -68,7 +70,7 @@ void Boids::run()
 
 	while (m_window.isOpen())
 	{
-		m_deltaTime = m_clock.restart().asSeconds();
+		float dt = m_clock.restart().asSeconds();
 		while (std::optional event = m_window.pollEvent())
 		{
 			if (event->is<sf::Event::Closed>())
@@ -116,10 +118,10 @@ void Boids::run()
 			}
 		}
 
-		m_fpsText.setString(sf::String(std::to_string((int)std::round(1.0f / m_deltaTime))));
+		m_fpsText.setString(sf::String(std::to_string((int)std::round(1.0f / dt))));
 
 		m_window.clear();
-		m_updateBoids(m_deltaTime);
+		m_updateBoids(dt);
 		m_draw();
 		m_window.display();
 	}
@@ -173,14 +175,4 @@ void Boids::m_updateBoidsPositions(float deltaTime)
 		boid->updatePosition(deltaTime, m_dimension);
 		m_partitioner->updateItem(boid);
 	}
-}
-
-void Boids::m_resetTree()
-{
-	m_partitioner->clear();
-	for (auto boid : m_boids)
-	{
-		m_partitioner->insert(boid);
-	}
-	//m_diskGraph.setBoids(m_boids, 30);
 }

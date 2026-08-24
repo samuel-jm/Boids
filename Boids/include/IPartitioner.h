@@ -2,6 +2,12 @@
 
 #include "ITranslatable.h"
 
+/// <summary>
+/// This interface is used by classes which intend to efficiently
+/// store and retrieve lists of ITranslatable instances. Quadtree
+/// and DiskGraph are two concrete implementations
+/// </summary>
+/// <typeparam name="T">The type which defines a 2D position, such as sf::Vector2f. Must contain .x and .y public members</typeparam>
 template<typename T>
 class IPartitioner
 {
