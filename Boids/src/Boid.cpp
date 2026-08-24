@@ -282,7 +282,7 @@ void Boid::m_saveInCone(std::unique_ptr<IPartitioner<sf::Vector2f>>& partitioner
 		sf::Vector2f diff(m_position - boid->m_position);
 		float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
-		if (boid->m_id != m_id && distance <= m_detectionRadius && boidInSight(boid))
+		if (boid->m_id != m_id && distance > 0 && distance <= m_detectionRadius && boidInSight(boid))
 			m_boidsInRange.push_back(boid);
 
 	}
