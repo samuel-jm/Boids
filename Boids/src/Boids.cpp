@@ -8,6 +8,7 @@ const int QUADTREE_MAX_ITEMS = 30;
 const int QUADTREE_MAX_LEVELS = 3;
 
 const int BOID_DETECTION_RADIUS = 30;
+const sf::Angle BOID_DETECTION_ANGLE = sf::Angle(sf::degrees(270));
 
 Boids::Boids() :
 	m_dimension(1200, 1000),
@@ -34,18 +35,19 @@ Boids::Boids() :
 		exit(-1);
 	}
 
+	m_boidType = std::make_shared<BoidType>("resources/boid.png", BOID_DETECTION_RADIUS, BOID_DETECTION_ANGLE);
 	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
 		sf::Vector2f velocity(std::rand() % 301 - 150, std::rand() % 301 - 150);
-		std::shared_ptr<Boid> boid(std::make_shared<Boid>(m_window, position, velocity, m_dimension, BOID_DETECTION_RADIUS));
+		std::shared_ptr<Boid> boid(std::make_shared<Boid>(m_boidType, position, velocity, BOID_DETECTION_RADIUS));
 		m_boids.push_back(boid);
 		m_partitioner->insert(boid);
 	}
 
-	Boid::setSeparationWeight(INITIAL_SEPARATION);
-	Boid::setCohesionWeight(INITIAL_COHESION);
-	Boid::setAllignmentWeight(INITIAL_ALLIGNMENT);
+	BoidType::setSeparationWeight(INITIAL_SEPARATION);
+	BoidType::setCohesionWeight(INITIAL_COHESION);
+	BoidType::setAllignmentWeight(INITIAL_ALLIGNMENT);
 
 	//m_diskGraph.init(m_boids, 30, m_window.getSize());
 
@@ -103,17 +105,17 @@ void Boids::run()
 				if (separation)
 				{
 					m_separation.update(mousePos);
-					Boid::setSeparationWeight(m_separation.getValue());
+					BoidType::setSeparationWeight(m_separation.getValue());
 				}
 				else if (cohesion)
 				{
 					m_cohesion.update(mousePos);
-					Boid::setCohesionWeight(m_cohesion.getValue());
+					BoidType::setCohesionWeight(m_cohesion.getValue());
 				}
 				else if (allignment)
 				{
 					m_allignment.update(mousePos);
-					Boid::setAllignmentWeight(m_allignment.getValue());
+					BoidType::setAllignmentWeight(m_allignment.getValue());
 				}
 			}
 		}
@@ -130,7 +132,7 @@ void Boids::run()
 void Boids::m_draw()
 {
 	for (auto boid : m_boids)
-		boid->draw(m_window, DEBUG);
+		m_boidType->draw(boid, m_window, DEBUG);
 
 	m_separation.draw(m_window);
 	m_cohesion.draw(m_window);
@@ -165,14 +167,14 @@ void Boids::m_updateBoids(float deltaTime)
 void Boids::m_updateBoidsVelocities(float deltaTime)
 {
 	for (auto boid : m_boids)
-		boid->updateVelocity(m_partitioner, m_boids, deltaTime);
+		m_boidType->updateVelocity(boid, m_partitioner, m_boids, deltaTime);
 }
 
 void Boids::m_updateBoidsPositions(float deltaTime)
 {
 	for (auto boid : m_boids) {
 		sf::Vector2f oldPosition = boid->getTranslation();
-		boid->updatePosition(deltaTime, m_dimension);
+		m_boidType->updatePosition(boid, deltaTime, m_dimension);
 		m_partitioner->updateItem(boid);
 	}
 }

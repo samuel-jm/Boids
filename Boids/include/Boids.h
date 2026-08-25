@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Boid.h"
+#include "BoidType.h"
 #include "Slider.inl"
 #include "PartitionerFactory.inl"
 
@@ -32,6 +33,7 @@ private:
 	/// </summary>
 	sf::Clock m_clock;
 
+	std::shared_ptr<BoidType> m_boidType;
 	std::vector<std::shared_ptr<Boid>> m_boids;
 
 	/// <summary>
