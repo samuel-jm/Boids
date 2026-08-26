@@ -4,8 +4,8 @@ Boids is a C++ application created using SFML for running a [Boids](https://en.w
 
 ## Screenshots
 
-![Boids](screenshots/Boids_DiskGraph.jpg)
-![Boids](screenshots/Boids_Quadtree.jpg)
+![Boids](Boids/screenshots/Boids_DiskGraph.jpg)
+![Boids](Boids/screenshots/Boids_Quadtree.jpg)
 
 ## TODO
 
