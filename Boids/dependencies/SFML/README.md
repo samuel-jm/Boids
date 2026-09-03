@@ -1,1 +1,0 @@
-Directory to place SFML include/ and lib/ directories in

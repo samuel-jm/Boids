@@ -3,7 +3,7 @@
 
 BoidType::BoidType(const char* texturePath, int detectionRadius, const sf::Angle& detectionAngle) :
 	m_detectionRadius(detectionRadius), m_detectionAngle(detectionAngle),
-	m_boidTexture("resources/boid.png"),
+	m_boidTexture("resources/textures/boid.png"),
 	m_boidSprite(m_boidTexture)
 {
 	m_boidSprite.setColor(sf::Color(0, 128, 255));
@@ -53,7 +53,7 @@ void BoidType::debugDraw(std::shared_ptr<Boid> boid, sf::RenderWindow& window)
 
 	if (text)
 	{
-		static sf::Font f("fonts/arial.ttf");
+		static sf::Font f("resources/arial.ttf");
 		static sf::Text t(f);
 		t.setString(std::to_string(boid->m_id));
 		t.setPosition(boid->m_position);

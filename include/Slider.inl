@@ -50,7 +50,9 @@ public:
 	/// <returns>Wether or not the mouse is hovering over the slider</returns>
 	bool mouseOver(sf::Vector2i mousePos)
 	{
-		return sf::FloatRect(m_topLeft, m_size).contains(sf::Vector2f(mousePos));
+		sf::Vector2f topLeft = static_cast<sf::Vector2f>(m_topLeft);
+		sf::Vector2f size = static_cast<sf::Vector2f>(m_size);
+		return sf::FloatRect(topLeft, size).contains(sf::Vector2f(mousePos));
 	}
 
 	/// <summary>
@@ -78,26 +80,16 @@ public:
 
 	T getValue() { return m_value; }
 
-	void setSize(sf::Vector2u size)
-	{
-		sf::Vector2f position = m_circle.getPosition();
-		int radius = m_circle.getRadius();
-
-		return sf::IntRect(sf::Vector2i(position.x, position.y), sf::Vector2i(radius * 2, radius * 2));
-	}
-
-	sf::IntRect getSize() { return m_size; }
-
 	void setTopLeft(sf::Vector2u topLeft)
 	{
 		sf::Vector2u currTopLeft = m_topLeft;
-		sf::Vector2u diff = topLeft - m_topLeft;
+		sf::Vector2f diff = topLeft - m_topLeft;
 		m_topLeft = topLeft;
 
-		m_barLight.setPosition(m_barLight.getPotition() + diff);
-		m_barDark.setPosition(m_barDark.getPotition() + diff);
-		m_middle.setPosition(m_middle.getPotition() + diff);
-		m_circle.setPosition(m_circle.getPotition() + diff);
+		m_barLight.setPosition(m_barLight.getPosition() + diff);
+		m_barDark.setPosition(m_barDark.getPosition() + diff);
+		m_middle.setPosition(m_middle.getPosition() + diff);
+		m_circle.setPosition(m_circle.getPosition() + diff);
 	}
 
 	sf::Vector2u getTopLeft() { return m_topLeft; }
@@ -115,8 +107,8 @@ public:
 	}
 
 private:
-	sf::Vector2f m_topLeft;
-	sf::Vector2f m_size;
+	sf::Vector2u m_topLeft;
+	sf::Vector2u m_size;
 	sf::RectangleShape m_barLight;
 	sf::RectangleShape m_barDark;
 	sf::RectangleShape m_middle;

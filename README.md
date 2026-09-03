@@ -4,34 +4,43 @@ Boids is a C++ application created using SFML for running a [Boids](https://en.w
 
 ## Screenshots
 
-![Boids](Boids/screenshots/Boids_DiskGraph.jpg)
-![Boids](Boids/screenshots/Boids_Quadtree.jpg)
+![Boids](screenshots/Boids_DiskGraph.jpg)
+![Boids](screenshots/Boids_Quadtree.jpg)
 
 ## TODO
 
 - Update UI to allow for greater user flexibility, including setting and disabling debug mode
-- Use CMake to allow for more flexibility in how/where the project may be built
 
 ## Requirements
 
 - C++17
-- SFML V3
+- CMake
 
 ## How to Use
 
+> **Note for Linux Users**:
+> According to the [cmake-sfml-project](https://github.com/SFML/cmake-sfml-project#command-line) README you will need to install the following packages:
+> - libxrandr-dev
+> - libxcursor-dev
+> - libxi-dev
+> - libudev-dev
+> - libfreetype-dev
+> - libflac-dev
+> - libvorbis-dev
+> - libgl1-mesa-dev
+> - libegl1-mesa-dev
+> - libfreetype-dev
+> - libharfbuzz-dev
+> - libmbedtls-dev
+> - libssh2-1-dev
+
 1. Clone the repository
-1. Download and unzip [SFML](https://www.sfml-dev.org/download/)
-1. Move the lib and include directories of SFML into Boids/Boids/dependencies/SFML
-1. Open the project in Visual Studio
-1. Build the project
-
-The bin/ directory of SFML contains dlls necessary to run the project, Place:
-- sfml-graphics-3.dll, sfml-system-3.dll, sfml-window-3.dll in Boids/Release or
-- sfml-graphics-d-3.dll, sfml-system-d-3.dll, sfml-window-d-3.dll in Boids/Debug
-
-depending on if you built the Release or Debug configurations respectively.
-
-You can now run the project from Visual Studio
+1. In the project root directory, run: 
+    ```
+    cmake -B build
+    cmake --build build --config Release
+    ```
+1. Run the executable found in ```build/bin/Release```
 
 ## License
 

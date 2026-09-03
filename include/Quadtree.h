@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <sstream>
+#include <algorithm>
 
 /// <summary>
 /// This class represents a Quadtree and is used to efficiently store and
@@ -241,7 +242,7 @@ private:
 			if (numItems)
 			{
 				sf::Vector2f pos(position.x, position.y);
-				sf::Font f("fonts/arial.ttf");
+				sf::Font f("resources/fonts/arial.ttf");
 				sf::Text t(f);
 				std::stringstream ss;
 				ss << items.size() << ", " << "(" << position.x << ", " << position.y << ")";

@@ -15,7 +15,7 @@ Boids::Boids() :
 	m_window(sf::VideoMode({ 1200, 1000 }), "Boids"),
 	m_clock(),
 	//m_quadtree(30, 3, {0, 0}, {(float)m_window.getSize().x, (float)m_window.getSize().y}),
-	m_font("fonts/arial.ttf"),
+	m_font("resources/fonts/arial.ttf"),
 	m_separationText(m_font), m_cohesionText(m_font), m_allignmentText(m_font),
 	m_fpsText(m_font),
 	m_separation({ 20, 20 }, { 200, 10 }, 0.f, 1.f, INITIAL_SEPARATION),
@@ -35,7 +35,7 @@ Boids::Boids() :
 		exit(-1);
 	}
 
-	m_boidType = std::make_shared<BoidType>("resources/boid.png", BOID_DETECTION_RADIUS, BOID_DETECTION_ANGLE);
+	m_boidType = std::make_shared<BoidType>("resources/textures/boid.png", BOID_DETECTION_RADIUS, BOID_DETECTION_ANGLE);
 	for (int i = 0; i < 1500; i++)
 	{
 		sf::Vector2f position(std::rand() % 1000 + 100, std::rand() % 800 + 100);
