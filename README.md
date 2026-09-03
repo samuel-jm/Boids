@@ -14,7 +14,7 @@ Boids is a C++ application created using SFML for running a [Boids](https://en.w
 ## Requirements
 
 - C++17
-- CMake
+- CMake 3.28+
 
 ## How to Use
 
