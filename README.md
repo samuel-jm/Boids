@@ -37,7 +37,7 @@ Boids is a C++ application created using SFML for running a [Boids](https://en.w
 1. Clone the repository
 1. In the project root directory, run: 
     ```
-    cmake -B build
+    cmake -B build -DCMAKE_BUILD_TYPE="Release"
     cmake --build build --config Release
     ```
 1. Run the executable found in ```build/bin/Release```
